@@ -140,7 +140,7 @@
                             <span>Rp {{ number_format($total, 0, ',', '.') }}</span>
                         </div>
                         
-                        <a href="#" class="block w-full bg-orange-600 text-white text-center py-3 rounded-xl mt-4 font-semibold hover:bg-orange-700 transition-colors shadow-lg shadow-orange-200">
+                        <a href="{{ route('checkout.index') }}" class="block w-full bg-orange-600 text-white text-center py-3 rounded-xl mt-4 font-semibold hover:bg-orange-700 transition-colors shadow-lg shadow-orange-200">
                             Lanjut Pembayaran
                         </a>
                     </div>

@@ -13,11 +13,12 @@ return new class extends Migration {
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->string('invoice_code')->unique(); // <--- PENTING
+            $table->enum('status', ['unpaid', 'payment_pending', 'ready_for_pickup', 'picked_up', 'cancelled'])->default('unpaid'); // <--- PENTING
+            $table->date('pickup_date'); // <--- PENTING
+            $table->text('notes')->nullable();
             $table->decimal('total_price', 10, 2)->default(0);
-            $table->string('invoice_code')->unique();
-            $table->enum('status', ['unpaid', 'payment_pending', 'ready_for_pickup', 'picked_up', 'cancelled'])->default('unpaid');
-            $table->date('pickup_date');
-            $table->text('admin_note')->nullable(); // Untuk nego WA
+            $table->text('admin_note')->nullable();
             $table->timestamps();
         });
     }
