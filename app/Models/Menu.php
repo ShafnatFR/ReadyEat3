@@ -7,15 +7,21 @@ use Illuminate\Database\Eloquent\Model;
 class Menu extends Model
 {
     use HasFactory;
-    
+
     // Perbaikan: sesuaikan dengan nama tabel 'menus'
     protected $table = 'menus';
 
     protected $fillable = [
-        'name', 'description', 'price', 'image', 'isAvaible'
+        'name',
+        'description',
+        'price',
+        'image',
+        'isAvailable',
+        'daily_limit'
     ];
 
-    public function orderItems() {
+    public function orderItems()
+    {
         return $this->hasMany(OrderItem::class);
     }
 }

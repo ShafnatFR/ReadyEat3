@@ -15,7 +15,7 @@ class AdminController extends Controller
         $today = Carbon::today();
 
         // --- 1. Statistik Utama (Kartu Atas) ---
-        
+
         // Hitung pesanan yang 'payment_pending' (Butuh Verifikasi WA)
         $verificationNeeded = Order::where('status', 'payment_pending')->count();
 
@@ -39,21 +39,21 @@ class AdminController extends Controller
 
         // --- 3. Sisa Kuota Menu (Sidebar Kanan) ---
         // Ini query agak kompleks: Menghitung total qty terjual per menu untuk tanggal pickup HARI INI
-        $menuQuotas = Menu::where('isAvaible', true) // Hanya menu aktif
+        $menuQuotas = Menu::where('isAvailable', true) // Hanya menu aktif
             ->get()
             ->map(function ($menu) use ($today) {
                 // Hitung berapa porsi menu ini yang sudah dipesan untuk hari ini
                 $soldQty = \App\Models\OrderItem::where('menu_id', $menu->id)
                     ->whereHas('order', function ($q) use ($today) {
-                        $q->whereDate('pickup_date', $today)
-                          ->whereNotIn('status', ['cancelled', 'unpaid']);
-                    })
+                    $q->whereDate('pickup_date', $today)
+                        ->whereNotIn('status', ['cancelled', 'unpaid']);
+                })
                     ->sum('quantity');
 
                 // Asumsi daily_limit ada di tabel menus (sesuai diskusi sebelumnya).
                 // Jika belum migrate kolom daily_limit, kita set default 50.
-                $limit = $menu->daily_limit ?? 50; 
-                
+                $limit = $menu->daily_limit ?? 50;
+
                 return [
                     'name' => $menu->name,
                     'sold' => $soldQty,

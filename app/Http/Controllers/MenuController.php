@@ -10,7 +10,7 @@ class MenuController extends Controller
     public function index(Request $request)
     {
         // 1. Query Dasar: Ambil hanya menu yang tersedia
-        $query = Menu::where('isAvaible', true);
+        $query = Menu::where('isAvailable', true);
 
         // 2. Fitur Filter Kategori (Optional, jika nanti kolom category ditambahkan)
         // Di Seeder tadi belum ada kolom category, tapi kita siapkan logikanya.
@@ -45,14 +45,20 @@ class MenuController extends Controller
 
         // 5. Hitung Total Keranjang
         $subtotal = 0;
-        foreach($cart as $item) {
+        foreach ($cart as $item) {
             $subtotal += $item['price'] * $item['quantity'];
         }
-        
+
         // Flat shipping rate Rp 15.000 jika ada barang, else 0
         $shipping = $subtotal > 0 ? 15000 : 0;
         $total = $subtotal + $shipping;
 
         return view('menus.index', compact('menus', 'cart', 'subtotal', 'shipping', 'total'));
+    }
+
+    // Homepage (Welcome page)
+    public function home()
+    {
+        return view('welcome');
     }
 }
