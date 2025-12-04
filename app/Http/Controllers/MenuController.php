@@ -2,28 +2,35 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Menu;
 use Illuminate\Http\Request;
 
 class MenuController extends Controller
 {
     public function index()
     {
-        // Mengambil semua menu untuk halaman listing
-        $menus = \App\Models\Menu::all();
+        // 1. Ambil semua menu dari database
+        $menus = Menu::all();
 
-        // Dummy Cart Data (Karena kita belum buat logika session cart)
-        // Nanti ini diganti dengan session('cart')
-        $cart = [];
-        $total = 0;
+        // 2. Ambil data keranjang dari Session (Default array kosong jika belum ada)
+        $cart = session()->get('cart', []);
 
-        return view('menus.index', compact('menus', 'cart', 'total'));
+        // 3. Hitung Subtotal, Shipping, dan Total (Logic dari React dipindah ke sini)
+        $subtotal = 0;
+        foreach($cart as $item) {
+            $subtotal += $item['price'] * $item['quantity'];
+        }
+
+        // Logic Shipping: Jika ada belanjaan, ongkir 15.000, jika tidak 0
+        $shipping = $subtotal > 0 ? 15000 : 0;
+        $total = $subtotal + $shipping;
+
+        return view('menus.index', compact('menus', 'cart', 'subtotal', 'shipping', 'total'));
     }
 
     public function home()
     {
-        // Mengambil 4 menu termahal/terbaik untuk ditampilkan di Landing Page
-        $bestProducts = \App\Models\Menu::limit(4)->get();
-
+        $bestProducts = Menu::limit(4)->get();
         return view('home', compact('bestProducts'));
     }
 }
