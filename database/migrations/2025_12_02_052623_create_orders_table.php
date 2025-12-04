@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -15,6 +14,10 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->decimal('total_price', 10, 2)->default(0);
+            $table->string('invoice_code')->unique();
+            $table->enum('status', ['unpaid', 'payment_pending', 'ready_for_pickup', 'picked_up', 'cancelled'])->default('unpaid');
+            $table->date('pickup_date');
+            $table->text('admin_note')->nullable(); // Untuk nego WA
             $table->timestamps();
         });
     }

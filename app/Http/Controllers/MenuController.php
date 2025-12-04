@@ -7,30 +7,52 @@ use Illuminate\Http\Request;
 
 class MenuController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        // 1. Ambil semua menu dari database
-        $menus = Menu::all();
+        // 1. Query Dasar: Ambil hanya menu yang tersedia
+        $query = Menu::where('isAvaible', true);
 
-        // 2. Ambil data keranjang dari Session (Default array kosong jika belum ada)
+        // 2. Fitur Filter Kategori (Optional, jika nanti kolom category ditambahkan)
+        // Di Seeder tadi belum ada kolom category, tapi kita siapkan logikanya.
+        // Jika kamu menambahkan kolom category di migration nanti, uncomment baris ini:
+        // if ($request->has('category') && $request->category != 'All') {
+        //    $query->where('category', $request->category);
+        // }
+
+        // 3. Fitur Sorting (Sesuai dropdown di desain)
+        if ($request->has('sort')) {
+            switch ($request->sort) {
+                case 'price_low':
+                    $query->orderBy('price', 'asc');
+                    break;
+                case 'price_high':
+                    $query->orderBy('price', 'desc');
+                    break;
+                case 'name_az':
+                    $query->orderBy('name', 'asc');
+                    break;
+                default:
+                    $query->latest();
+            }
+        } else {
+            $query->latest(); // Default urutan terbaru
+        }
+
+        $menus = $query->get();
+
+        // 4. Data Keranjang (Cart) dari Session
         $cart = session()->get('cart', []);
 
-        // 3. Hitung Subtotal, Shipping, dan Total (Logic dari React dipindah ke sini)
+        // 5. Hitung Total Keranjang
         $subtotal = 0;
         foreach($cart as $item) {
             $subtotal += $item['price'] * $item['quantity'];
         }
-
-        // Logic Shipping: Jika ada belanjaan, ongkir 15.000, jika tidak 0
+        
+        // Flat shipping rate Rp 15.000 jika ada barang, else 0
         $shipping = $subtotal > 0 ? 15000 : 0;
         $total = $subtotal + $shipping;
 
         return view('menus.index', compact('menus', 'cart', 'subtotal', 'shipping', 'total'));
-    }
-
-    public function home()
-    {
-        $bestProducts = Menu::limit(4)->get();
-        return view('home', compact('bestProducts'));
     }
 }
