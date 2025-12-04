@@ -11,10 +11,8 @@ use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
-    // === LOGIN ===
-
     /**
-     * Tampilkan halaman login
+     * Show login form
      */
     public function showLoginForm()
     {
@@ -22,7 +20,7 @@ class AuthController extends Controller
     }
 
     /**
-     * Proses login user
+     * Handle login request
      */
     public function login(Request $request)
     {
@@ -36,8 +34,6 @@ class AuthController extends Controller
 
         if (Auth::attempt($credentials, $remember)) {
             $request->session()->regenerate();
-
-            // Redirect ke halaman yang dituju sebelumnya atau ke home
             return redirect()->intended(route('home'));
         }
 
@@ -47,21 +43,7 @@ class AuthController extends Controller
     }
 
     /**
-     * Logout user
-     */
-    public function logout(Request $request)
-    {
-        Auth::logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-
-        return redirect()->route('home');
-    }
-
-    // === REGISTER ===
-
-    /**
-     * Tampilkan halaman registrasi
+     * Show registration form
      */
     public function showRegisterForm()
     {
@@ -69,7 +51,7 @@ class AuthController extends Controller
     }
 
     /**
-     * Proses registrasi user baru
+     * Handle registration
      */
     public function register(Request $request)
     {
@@ -83,19 +65,16 @@ class AuthController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'role' => 'customer', // Default role untuk user baru
+            'role' => 'customer',
         ]);
 
-        // Auto login setelah register
         Auth::login($user);
 
-        return redirect()->route('home')->with('status', 'Selamat datang! Akun Anda berhasil dibuat.');
+        return redirect()->route('home')->with('status', 'Akun berhasil dibuat!');
     }
 
-    // === FORGOT PASSWORD ===
-
     /**
-     * Tampilkan form forgot password
+     * Show forgot password form
      */
     public function showForgotPasswordForm()
     {
@@ -103,7 +82,7 @@ class AuthController extends Controller
     }
 
     /**
-     * Kirim link reset password ke email
+     * Send password reset link
      */
     public function sendResetLinkEmail(Request $request)
     {
@@ -111,17 +90,28 @@ class AuthController extends Controller
             'email' => 'required|email',
         ]);
 
-        // Kirim link reset password
         $status = Password::sendResetLink(
             $request->only('email')
         );
 
         if ($status === Password::RESET_LINK_SENT) {
-            return back()->with('status', 'Link reset password telah dikirim ke email Anda!');
+            return back()->with('status', 'Link reset password telah dikirim!');
         }
 
         throw ValidationException::withMessages([
-            'email' => 'Email tidak ditemukan dalam sistem kami.',
+            'email' => 'Email tidak ditemukan.',
         ]);
+    }
+
+    /**
+     * Logout
+     */
+    public function logout(Request $request)
+    {
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()->route('home');
     }
 }

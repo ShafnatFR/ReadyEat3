@@ -7,17 +7,17 @@ use Illuminate\Http\Request;
 
 class CartController extends Controller
 {
-    // Tambah item ke keranjang
+    /**
+     * Add item to cart
+     */
     public function addToCart($id)
     {
         $menu = Menu::findOrFail($id);
         $cart = session()->get('cart', []);
 
-        // Jika produk sudah ada di cart, tambahkan quantity
-        if(isset($cart[$id])) {
+        if (isset($cart[$id])) {
             $cart[$id]['quantity']++;
         } else {
-            // Jika belum ada, masukkan data baru
             $cart[$id] = [
                 "name" => $menu->name,
                 "quantity" => 1,
@@ -30,10 +30,12 @@ class CartController extends Controller
         return redirect()->back()->with('success', 'Menu ditambahkan ke keranjang!');
     }
 
-    // Update quantity (Tambah/Kurang tombol di sidebar)
+    /**
+     * Update cart quantity
+     */
     public function updateCart(Request $request)
     {
-        if($request->id && $request->quantity){
+        if ($request->id && $request->quantity) {
             $cart = session()->get('cart');
             $cart[$request->id]["quantity"] = $request->quantity;
             session()->put('cart', $cart);
@@ -41,12 +43,14 @@ class CartController extends Controller
         return redirect()->back();
     }
 
-    // Hapus item dari keranjang
+    /**
+     * Remove item from cart
+     */
     public function removeCart(Request $request)
     {
-        if($request->id) {
+        if ($request->id) {
             $cart = session()->get('cart');
-            if(isset($cart[$request->id])) {
+            if (isset($cart[$request->id])) {
                 unset($cart[$request->id]);
                 session()->put('cart', $cart);
             }
