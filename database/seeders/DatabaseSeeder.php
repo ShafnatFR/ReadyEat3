@@ -8,6 +8,7 @@ use App\Models\OrderItem;
 use App\Models\Payment;
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
@@ -17,10 +18,20 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // 1. Buat User Admin/Test (Agar bisa login)
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-            'password' => bcrypt('password'), // Pastikan password diketahui
+        // 1. Buat Akun Admin
+        User::create([
+            'name' => 'Administrator',
+            'email' => 'admin@readyeat.com',
+            'password' => Hash::make('password'), // Password admin
+            'role' => 'admin', // Role kunci
+        ]);
+
+        // 2. Buat Akun Mahasiswa Dummy (Opsional, buat ngetes)
+        User::create([
+            'name' => 'Shafnat Mahasiswa',
+            'email' => 'shafnat@student.telkom.ac.id',
+            'password' => Hash::make('password'),
+            'role' => 'customer',
         ]);
 
         // 2. Buat 5 User Customer Acak
@@ -33,12 +44,12 @@ class DatabaseSeeder extends Seeder
         foreach ($users as $user) {
             // Setiap user melakukan 1 sampai 3 pesanan
             $ordersCount = rand(1, 3);
-            
+
             Order::factory($ordersCount)->create([
                 'user_id' => $user->id,
                 'total_price' => 0, // Nanti diupdate setelah item dimasukkan
             ])->each(function ($order) use ($menus) {
-                
+
                 // --- Mengisi Keranjang (Order Items) ---
                 // Ambil 1 sampai 4 menu acak untuk pesanan ini
                 $randomMenus = $menus->random(rand(1, 4));

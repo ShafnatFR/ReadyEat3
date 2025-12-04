@@ -3,10 +3,10 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AdminAuthController; // Jangan lupa import ini
+use App\Http\Controllers\MenuController;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('/', [MenuController::class, 'home'])->name('home');
+Route::get('/menus', [MenuController::class, 'index'])->name('menus.index');
 
 // --- Rute Guest Admin (Login) ---
 Route::prefix('admin')->middleware('guest')->group(function () {
@@ -16,7 +16,7 @@ Route::prefix('admin')->middleware('guest')->group(function () {
 
 // --- Rute Admin (Terproteksi) ---
 Route::middleware(['auth'])->prefix('admin')->group(function () {
-    
+
     // Logout
     Route::post('/logout', [AdminAuthController::class, 'logout'])->name('admin.logout');
 
