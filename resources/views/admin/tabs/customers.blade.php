@@ -1,7 +1,7 @@
 {{-- Customer Management Tab --}}
 <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-x-auto" x-data="{ selectedCustomerId: null }">
     <div class="p-4 border-b dark:border-gray-700">
-        <h3 class="text-xl font-bold text-gray-900 dark:text-white">Customer Management ({{ count($customers) }})</h3>
+        <h3 class="text-xl font-bold text-gray-900 dark:text-white">Customer Management ({{ $customers['customers']->total() }})</h3>
     </div>
 
     <table class="w-full text-left">
@@ -15,7 +15,7 @@
             </tr>
         </thead>
         <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-            @forelse($customers as $customer)
+            @forelse($customers['customers'] as $customer)
                 <tr @click="selectedCustomerId = (selectedCustomerId === '{{ $customer['phone'] }}' ? null : '{{ $customer['phone'] }}')"
                     class="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50">
                     <td class="p-4">
@@ -51,7 +51,7 @@
                                         <div class="font-bold text-gray-900 dark:text-white">Rp
                                             {{ number_format($order->total_price, 0, ',', '.') }}</div>
                                         <div
-                                            class="text-xs {{ $order->status === 'Completed' ? 'text-green-600' : 'text-orange-600' }}">
+                                            class="text-xs {{ $order->status === 'picked_up' ? 'text-green-600' : 'text-orange-600' }}">
                                             {{ $order->status }}</div>
                                     </div>
                                 </div>
@@ -66,4 +66,7 @@
             @endforelse
         </tbody>
     </table>
+    
+    {{-- Pagination Controls --}}
+    @include('admin.components.pagination', ['items' => $customers['customers'], 'perPage' => $customers['perPage'] ?? 20])
 </div>

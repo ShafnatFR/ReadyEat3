@@ -30,15 +30,18 @@ class AdminController extends Controller
         // Verification tab data
         $verificationData = $this->getVerificationData($request);
 
-        // Production recap data
-        $productionDate = $request->get('production_date', Carbon::tomorrow()->format('Y-m-d'));
+        // Production recap data - Use latest available date with orders instead of tomorrow
+        $defaultProductionDate = Order::where('status', 'ready_for_pickup')
+            ->orderBy('pickup_date', 'desc')
+            ->value('pickup_date') ?? Carbon::tomorrow()->format('Y-m-d');
+        $productionDate = $request->get('production_date', $defaultProductionDate);
         $productionRecap = $this->getProductionRecap($productionDate);
 
-        // Pickup data
+        // Pickup data - Use latest available date instead of today
         $pickupOrders = $this->getPickupOrders($request);
 
         // Customer data
-        $customers = $this->getCustomers();
+        $customers = $this->getCustomers($request); // Pass request for pagination
 
         return view('admin.dashboard', compact(
             'tab',
@@ -222,18 +225,19 @@ class AdminController extends Controller
     }
 
     /**
-     * Get verification data
+     * Get verification data with pagination
      */
     private function getVerificationData(Request $request)
     {
         $statusFilter = $request->get('status_filter', 'All Active');
         $dateFilter = $request->get('date_filter', '');
+        $perPage = $request->get('per_page', 20); // NEW: Pagination support
 
         $query = Order::with(['user', 'items.menu']);
 
         // Status filter
         if ($statusFilter === 'All Active') {
-            $query->whereIn('status', ['payment_pending', 'ready_for_pickup']); // FIX: Use correct enum values
+            $query->whereIn('status', ['payment_pending', 'ready_for_pickup']);
         } elseif ($statusFilter !== 'All') {
             $query->where('status', $statusFilter);
         }
@@ -243,12 +247,13 @@ class AdminController extends Controller
             $query->where('pickup_date', $dateFilter);
         }
 
-        $orders = $query->orderBy('pickup_date', 'desc')->get();
+        $orders = $query->orderBy('pickup_date', 'desc')->paginate($perPage); // Changed to paginate
 
         return [
             'orders' => $orders,
             'statusFilter' => $statusFilter,
             'dateFilter' => $dateFilter,
+            'perPage' => $perPage, // NEW: Pass perPage to view
         ];
     }
 
@@ -286,10 +291,15 @@ class AdminController extends Controller
     private function getPickupOrders(Request $request)
     {
         $search = $request->get('search', '');
-        $pickupDate = $request->get('pickup_date', Carbon::today()->format('Y-m-d'));
+
+        // Use latest available date with ready_for_pickup orders instead of today
+        $defaultPickupDate = Order::where('status', 'ready_for_pickup')
+            ->orderBy('pickup_date', 'desc')
+            ->value('pickup_date') ?? Carbon::today()->format('Y-m-d');
+        $pickupDate = $request->get('pickup_date', $defaultPickupDate);
 
         $query = Order::with('items.menu')
-            ->where('status', 'ready_for_pickup') // FIX: Use correct status enum
+            ->where('status', 'ready_for_pickup')
             ->where('pickup_date', $pickupDate);
 
         if ($search) {
@@ -303,9 +313,9 @@ class AdminController extends Controller
     }
 
     /**
-     * Get customers
+     * Get customers with pagination
      */
-    private function getCustomers()
+    private function getCustomers(Request $request = null)
     {
         $orders = Order::with('items.menu')->get();
         $customerData = [];
@@ -324,7 +334,7 @@ class AdminController extends Controller
             }
 
             $customerData[$phone]['totalOrders']++;
-            if (in_array($order->status, ['picked_up', 'ready_for_pickup'])) { // FIX: Use correct status
+            if (in_array($order->status, ['picked_up', 'ready_for_pickup'])) {
                 $customerData[$phone]['totalSpent'] += $order->total_price;
             }
             $customerData[$phone]['orders'][] = $order;
@@ -335,7 +345,26 @@ class AdminController extends Controller
         }
 
         usort($customerData, fn($a, $b) => $b['totalSpent'] <=> $a['totalSpent']);
-        return $customerData;
+
+        // NEW: Manual pagination for array data
+        $perPage = $request ? $request->get('per_page', 20) : 20;
+        $currentPage = $request ? $request->get('page', 1) : 1;
+        $offset = ($currentPage - 1) * $perPage;
+        $paginatedData = array_slice($customerData, $offset, $perPage);
+
+        // Create Laravel paginator instance
+        $paginator = new \Illuminate\Pagination\LengthAwarePaginator(
+            $paginatedData,
+            count($customerData),
+            $perPage,
+            $currentPage,
+            ['path' => $request ? $request->url() : url()->current(), 'query' => $request ? $request->query() : []]
+        );
+
+        return [
+            'customers' => $paginator,
+            'perPage' => $perPage,
+        ];
     }
 
     /**

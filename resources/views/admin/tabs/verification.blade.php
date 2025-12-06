@@ -1,17 +1,17 @@
 {{-- Order Verification Tab --}}
 <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-x-auto" x-data="{ selectedOrder: null, verifyModalOpen: false }">
     <div class="p-4 border-b dark:border-gray-700 flex justify-between items-center gap-4 flex-wrap">
-        <h3 class="text-xl font-bold">Orders ({{ count($data['orders']) }})</h3>
+        <h3 class="text-xl font-bold">Orders ({{ $data['orders']->total() }})</h3>
         <form method="GET" action="{{ route('admin.dashboard') }}" class="flex gap-4">
             <input type="hidden" name="tab" value="verification">
             <input type="date" name="date_filter" value="{{ $data['dateFilter'] }}" class="bg-white dark:bg-gray-700 border rounded-md px-2 py-1 text-gray-900 dark:text-white">
             <select name="status_filter" class="bg-white dark:bg-gray-700 border rounded-md px-2 py-1 text-gray-900 dark:text-white">
                 <option value="All Active" {{ $data['statusFilter'] === 'All Active' ? 'selected' : '' }}>All Active</option>
-                <option value="Pending Verification" {{ $data['statusFilter'] === 'Pending Verification' ? 'selected' : '' }}>Pending Verification</option>
-                <option value="Preparing" {{ $data['statusFilter'] === 'Preparing' ? 'selected' : '' }}>Preparing</option>
-                <option value="Ready for Pickup" {{ $data['statusFilter'] === 'Ready for Pickup' ? 'selected' : '' }}>Ready for Pickup</option>
-                <option value="Completed" {{ $data['statusFilter'] === 'Completed' ? 'selected' : '' }}>Completed</option>
-                <option value="Rejected" {{ $data['statusFilter'] === 'Rejected' ? 'selected' : '' }}>Rejected</option>
+                <option value="payment_pending" {{ $data['statusFilter'] === 'payment_pending' ? 'selected' : '' }}>Payment Pending</option>
+                <option value="ready_for_pickup" {{ $data['statusFilter'] === 'ready_for_pickup' ? 'selected' : '' }}>Ready for Pickup</option>
+                <option value="picked_up" {{ $data['statusFilter'] === 'picked_up' ? 'selected' : '' }}>Picked Up</option>
+                <option value="cancelled" {{ $data['statusFilter'] === 'cancelled' ? 'selected' : '' }}>Cancelled</option>
+                <option value="unpaid" {{ $data['statusFilter'] === 'unpaid' ? 'selected' : '' }}>Unpaid</option>
                 <option value="All" {{ $data['statusFilter'] === 'All' ? 'selected' : '' }}>All</option>
             </select>
             <button type="submit" class="bg-primary text-white px-3 py-1 rounded">Filter</button>
@@ -115,4 +115,7 @@
             @endforelse
         </tbody>
     </table>
+    
+    {{-- Pagination Controls --}}
+    @include('admin.components.pagination', ['items' => $data['orders'], 'perPage' => $data['perPage'] ?? 20])
 </div>
