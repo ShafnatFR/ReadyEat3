@@ -64,7 +64,7 @@ class AdminController extends Controller
 
         // Filter orders based on date
         $filteredOrders = $this->filterOrdersByDate(Order::with('items.menu')->get(), $filterType, $selectedDate);
-        $completedOrders = $filteredOrders->where('status', 'Completed');
+        $completedOrders = $filteredOrders->whereIn('status', ['picked_up', 'ready_for_pickup']); // FIX: Use correct status enums
 
         // Basic stats
         $revenue = $completedOrders->sum('total_price');
@@ -210,7 +210,7 @@ class AdminController extends Controller
             if (!isset($customerStats[$phone])) {
                 $customerStats[$phone] = ['name' => $order->customer_name, 'totalSpent' => 0];
             }
-            if ($order->status === 'Completed') {
+            if (in_array($order->status, ['picked_up', 'ready_for_pickup'])) { // FIX: Use correct status
                 $customerStats[$phone]['totalSpent'] += $order->total_price;
             }
         }
@@ -233,7 +233,7 @@ class AdminController extends Controller
 
         // Status filter
         if ($statusFilter === 'All Active') {
-            $query->whereIn('status', ['Pending Verification', 'Preparing', 'Ready for Pickup']);
+            $query->whereIn('status', ['payment_pending', 'ready_for_pickup']); // FIX: Use correct enum values
         } elseif ($statusFilter !== 'All') {
             $query->where('status', $statusFilter);
         }
@@ -259,7 +259,7 @@ class AdminController extends Controller
     {
         $orders = Order::with('items.menu')
             ->where('pickup_date', $date)
-            ->whereIn('status', ['Preparing', 'Ready for Pickup'])
+            ->whereIn('status', ['ready_for_pickup']) // FIX: Use correct status enum
             ->get();
 
         $recap = [];
@@ -289,7 +289,7 @@ class AdminController extends Controller
         $pickupDate = $request->get('pickup_date', Carbon::today()->format('Y-m-d'));
 
         $query = Order::with('items.menu')
-            ->where('status', 'Ready for Pickup')
+            ->where('status', 'ready_for_pickup') // FIX: Use correct status enum
             ->where('pickup_date', $pickupDate);
 
         if ($search) {
@@ -324,7 +324,7 @@ class AdminController extends Controller
             }
 
             $customerData[$phone]['totalOrders']++;
-            if ($order->status === 'Completed') {
+            if (in_array($order->status, ['picked_up', 'ready_for_pickup'])) { // FIX: Use correct status
                 $customerData[$phone]['totalSpent'] += $order->total_price;
             }
             $customerData[$phone]['orders'][] = $order;
@@ -349,7 +349,7 @@ class AdminController extends Controller
             'payment_proof' => 'nullable|image|max:2048',
         ]);
 
-        $order->status = 'Preparing';
+        $order->status = 'ready_for_pickup'; // FIX: Use correct enum value
         $order->pickup_date = $request->pickup_date;
         $order->admin_note = $request->admin_note;
 
@@ -372,7 +372,7 @@ class AdminController extends Controller
             'admin_note' => 'nullable|string',
         ]);
 
-        $order->status = 'Rejected';
+        $order->status = 'cancelled'; // FIX: Use correct enum value
         $order->admin_note = $request->admin_note;
         $order->save();
 
@@ -476,7 +476,7 @@ class AdminController extends Controller
      */
     public function markAsCompleted(Order $order)
     {
-        $order->status = 'Completed';
+        $order->status = 'picked_up'; // FIX: Use correct enum value
         $order->save();
 
         return back()->with('success', 'Order marked as completed.');

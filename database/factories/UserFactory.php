@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -11,10 +12,7 @@ use Illuminate\Support\Str;
  */
 class UserFactory extends Factory
 {
-    /**
-     * The current password being used by the factory.
-     */
-    protected static ?string $password;
+    protected static ?string $password = null;
 
     /**
      * Define the model's default state.
@@ -23,13 +21,37 @@ class UserFactory extends Factory
      */
     public function definition(): array
     {
+        $firstName = fake()->firstName();
+        $lastName = fake()->lastName();
+
         return [
-            'name' => fake()->name(),
-            'email' => fake()->unique()->safeEmail(),
-            'email_verified_at' => now(),
+            'name' => $firstName . ' ' . $lastName,
+            'email' => strtolower($firstName . '.' . $lastName . rand(1, 999)) . '@' . fake()->freeEmailDomain(),
             'password' => static::$password ??= Hash::make('password'),
+            'role' => 'customer', // Default role
             'remember_token' => Str::random(10),
+            'email_verified_at' => now(),
         ];
+    }
+
+    /**
+     * Create customer user (default)
+     */
+    public function customer(): static
+    {
+        return $this->state(fn(array $attributes) => [
+            'role' => 'customer',
+        ]);
+    }
+
+    /**
+     * Create admin user
+     */
+    public function admin(): static
+    {
+        return $this->state(fn(array $attributes) => [
+            'role' => 'admin',
+        ]);
     }
 
     /**
@@ -37,7 +59,7 @@ class UserFactory extends Factory
      */
     public function unverified(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn(array $attributes) => [
             'email_verified_at' => null,
         ]);
     }
