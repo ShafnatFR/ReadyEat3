@@ -67,7 +67,7 @@ class AdminController extends Controller
 
         // Filter orders based on date
         $filteredOrders = $this->filterOrdersByDate(Order::with('items.menu')->get(), $filterType, $selectedDate);
-        $completedOrders = $filteredOrders->whereIn('status', ['picked_up', 'ready_for_pickup']); // FIX: Use correct status enums
+        $completedOrders = $filteredOrders->whereIn('status', ['picked_up', 'ready_for_pickup']);
 
         // Basic stats
         $revenue = $completedOrders->sum('total_price');
@@ -101,9 +101,6 @@ class AdminController extends Controller
         ];
     }
 
-    /**
-     * Filter orders by date
-     */
     private function filterOrdersByDate($orders, $filterType, $selectedDate)
     {
         return $orders->filter(function ($order) use ($filterType, $selectedDate) {
@@ -123,9 +120,6 @@ class AdminController extends Controller
         });
     }
 
-    /**
-     * Get top products
-     */
     private function getTopProducts($orders)
     {
         $productSales = [];
@@ -143,9 +137,6 @@ class AdminController extends Controller
         return array_slice($productSales, 0, 5);
     }
 
-    /**
-     * Get category distribution
-     */
     private function getCategoryDistribution($orders)
     {
         $categorySales = [];
@@ -166,9 +157,6 @@ class AdminController extends Controller
         return $result;
     }
 
-    /**
-     * Get revenue trend
-     */
     private function getRevenueTrend($completedOrders, $filterType, $selectedDate)
     {
         $revenueOverTime = [];
@@ -202,69 +190,62 @@ class AdminController extends Controller
         return $revenueOverTime;
     }
 
-    /**
-     * Get top customers
-     */
     private function getTopCustomers($orders)
     {
         $customerStats = [];
         foreach ($orders as $order) {
             $phone = $order->customer_phone;
             if (!isset($customerStats[$phone])) {
-                $customerStats[$phone] = ['name' => $order->customer_name, 'totalSpent' => 0];
+                $customerStats[$phone] = [
+                    'name' => $order->customer_name,
+                    'phone' => $phone,
+                    'orders' => 0,
+                    'total' => 0
+                ];
             }
-            if (in_array($order->status, ['picked_up', 'ready_for_pickup'])) { // FIX: Use correct status
-                $customerStats[$phone]['totalSpent'] += $order->total_price;
+            $customerStats[$phone]['orders']++;
+            if (in_array($order->status, ['picked_up', 'ready_for_pickup'])) {
+                $customerStats[$phone]['total'] += $order->total_price;
             }
         }
 
-        usort($customerStats, fn($a, $b) => $b['totalSpent'] <=> $a['totalSpent']);
-        $topCustomers = array_slice($customerStats, 0, 5);
-
-        return array_map(fn($c) => ['label' => $c['name'], 'value' => $c['totalSpent']], $topCustomers);
+        usort($customerStats, fn($a, $b) => $b['total'] <=> $a['total']);
+        return array_slice($customerStats, 0, 5);
     }
 
-    /**
-     * Get verification data with pagination
-     */
     private function getVerificationData(Request $request)
     {
         $statusFilter = $request->get('status_filter', 'All Active');
         $dateFilter = $request->get('date_filter', '');
-        $perPage = $request->get('per_page', 20); // NEW: Pagination support
+        $perPage = $request->get('per_page', 20);
 
         $query = Order::with(['user', 'items.menu']);
 
-        // Status filter
         if ($statusFilter === 'All Active') {
             $query->whereIn('status', ['payment_pending', 'ready_for_pickup']);
         } elseif ($statusFilter !== 'All') {
             $query->where('status', $statusFilter);
         }
 
-        // Date filter
         if ($dateFilter) {
             $query->where('pickup_date', $dateFilter);
         }
 
-        $orders = $query->orderBy('pickup_date', 'desc')->paginate($perPage); // Changed to paginate
+        $orders = $query->orderBy('pickup_date', 'desc')->paginate($perPage);
 
         return [
             'orders' => $orders,
             'statusFilter' => $statusFilter,
             'dateFilter' => $dateFilter,
-            'perPage' => $perPage, // NEW: Pass perPage to view
+            'perPage' => $perPage,
         ];
     }
 
-    /**
-     * Get production recap
-     */
     private function getProductionRecap($date)
     {
         $orders = Order::with('items.menu')
             ->where('pickup_date', $date)
-            ->whereIn('status', ['ready_for_pickup']) // FIX: Use correct status enum
+            ->whereIn('status', ['ready_for_pickup'])
             ->get();
 
         $recap = [];
@@ -285,14 +266,10 @@ class AdminController extends Controller
         return array_values($recap);
     }
 
-    /**
-     * Get pickup orders
-     */
     private function getPickupOrders(Request $request)
     {
         $search = $request->get('search', '');
 
-        // Use latest available date with ready_for_pickup orders instead of today
         $defaultPickupDate = Order::where('status', 'ready_for_pickup')
             ->orderBy('pickup_date', 'desc')
             ->value('pickup_date') ?? Carbon::today()->format('Y-m-d');
@@ -312,9 +289,6 @@ class AdminController extends Controller
         return $query->get();
     }
 
-    /**
-     * Get customers with pagination
-     */
     private function getCustomers(Request $request = null)
     {
         $orders = Order::with('items.menu')->get();
@@ -346,13 +320,11 @@ class AdminController extends Controller
 
         usort($customerData, fn($a, $b) => $b['totalSpent'] <=> $a['totalSpent']);
 
-        // NEW: Manual pagination for array data
         $perPage = $request ? $request->get('per_page', 20) : 20;
         $currentPage = $request ? $request->get('page', 1) : 1;
         $offset = ($currentPage - 1) * $perPage;
         $paginatedData = array_slice($customerData, $offset, $perPage);
 
-        // Create Laravel paginator instance
         $paginator = new \Illuminate\Pagination\LengthAwarePaginator(
             $paginatedData,
             count($customerData),
@@ -367,18 +339,16 @@ class AdminController extends Controller
         ];
     }
 
-    /**
-     * Accept order (verify payment)
-     */
     public function acceptOrder(Request $request, Order $order)
     {
         $request->validate([
+            'status' => 'required|in:payment_pending,ready_for_pickup,picked_up,cancelled',
             'pickup_date' => 'required|date',
             'admin_note' => 'nullable|string',
             'payment_proof' => 'nullable|image|max:2048',
         ]);
 
-        $order->status = 'ready_for_pickup'; // FIX: Use correct enum value
+        $order->status = $request->status;
         $order->pickup_date = $request->pickup_date;
         $order->admin_note = $request->admin_note;
 
@@ -389,28 +359,22 @@ class AdminController extends Controller
 
         $order->save();
 
-        return back()->with('success', 'Order accepted and moved to preparing status.');
+        return back()->with('success', 'Order updated successfully.');
     }
 
-    /**
-     * Reject order
-     */
     public function rejectOrder(Request $request, Order $order)
     {
         $request->validate([
             'admin_note' => 'nullable|string',
         ]);
 
-        $order->status = 'cancelled'; // FIX: Use correct enum value
+        $order->status = 'cancelled';
         $order->admin_note = $request->admin_note;
         $order->save();
 
         return back()->with('success', 'Order rejected.');
     }
 
-    /**
-     * Upload payment proof
-     */
     public function uploadPaymentProof(Request $request, Order $order)
     {
         $request->validate([
@@ -424,9 +388,6 @@ class AdminController extends Controller
         return back()->with('success', 'Payment proof uploaded successfully.');
     }
 
-    /**
-     * Store product
-     */
     public function storeProduct(Request $request)
     {
         $validated = $request->validate([
@@ -452,9 +413,6 @@ class AdminController extends Controller
         return back()->with('success', 'Product created successfully.');
     }
 
-    /**
-     * Update product
-     */
     public function updateProduct(Request $request, Menu $product)
     {
         $validated = $request->validate([
@@ -480,18 +438,12 @@ class AdminController extends Controller
         return back()->with('success', 'Product updated successfully.');
     }
 
-    /**
-     * Delete product
-     */
     public function deleteProduct(Menu $product)
     {
         $product->delete();
         return back()->with('success', 'Product deleted successfully.');
     }
 
-    /**
-     * Toggle product availability
-     */
     public function toggleProductAvailability(Menu $product)
     {
         $product->isAvailable = !$product->isAvailable;
@@ -500,20 +452,14 @@ class AdminController extends Controller
         return back()->with('success', 'Product availability updated.');
     }
 
-    /**
-     * Mark order as completed
-     */
     public function markAsCompleted(Order $order)
     {
-        $order->status = 'picked_up'; // FIX: Use correct enum value
+        $order->status = 'picked_up';
         $order->save();
 
         return back()->with('success', 'Order marked as completed.');
     }
 
-    /**
-     * Toggle dark mode
-     */
     public function toggleTheme()
     {
         $theme = session('theme', 'light');
