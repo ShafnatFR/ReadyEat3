@@ -30,18 +30,18 @@ class AdminController extends Controller
         // Verification tab data
         $verificationData = $this->getVerificationData($request);
 
-        // Production recap data
+        // Production recap data - Use latest available date with orders instead of tomorrow
         $defaultProductionDate = Order::where('status', 'ready_for_pickup')
             ->orderBy('pickup_date', 'desc')
             ->value('pickup_date') ?? Carbon::tomorrow()->format('Y-m-d');
         $productionDate = $request->get('production_date', $defaultProductionDate);
         $productionRecap = $this->getProductionRecap($productionDate);
 
-        // Pickup data
+        // Pickup data - Use latest available date instead of today
         $pickupOrders = $this->getPickupOrders($request);
 
         // Customer data
-        $customers = $this->getCustomers($request);
+        $customers = $this->getCustomers($request); // Pass request for pagination
 
         return view('admin.dashboard', compact(
             'tab',
@@ -58,21 +58,12 @@ class AdminController extends Controller
     }
 
     /**
-     * Get dashboard statistics with time filtering - FIXED
+     * Get dashboard statistics
      */
     private function getDashboardStats(Request $request)
     {
         $filterType = $request->get('filter_type', 'monthly');
-
-        // FIXED: Set proper default date based on filter type
-        $defaultDate = match ($filterType) {
-            'daily' => Carbon::now()->format('Y-m-d'),
-            'weekly' => Carbon::now()->format('o-\WW'),  // ISO-8601 week format
-            'yearly' => Carbon::now()->format('Y'),
-            default => Carbon::now()->format('Y-m'),
-        };
-
-        $selectedDate = $request->get('selected_date', $defaultDate);
+        $selectedDate = $request->get('selected_date', Carbon::now()->format('Y-m'));
 
         // Filter orders based on date
         $filteredOrders = $this->filterOrdersByDate(Order::with('items.menu')->get(), $filterType, $selectedDate);
@@ -110,9 +101,6 @@ class AdminController extends Controller
         ];
     }
 
-    /**
-     * Filter orders by date - FIXED for weekly bug
-     */
     private function filterOrdersByDate($orders, $filterType, $selectedDate)
     {
         return $orders->filter(function ($order) use ($filterType, $selectedDate) {
@@ -121,16 +109,8 @@ class AdminController extends Controller
             if ($filterType === 'daily') {
                 return $order->pickup_date === $selectedDate;
             } elseif ($filterType === 'weekly') {
-                // FIXED: Safe parsing with validation
-                if (strpos($selectedDate, '-W') !== false) {
-                    $parts = explode('-W', $selectedDate);
-                    if (count($parts) === 2) {
-                        list($year, $week) = $parts;
-                        return $orderDate->year == $year && $orderDate->week == $week;
-                    }
-                }
-                // Fallback to monthly if format is invalid
-                return substr($order->pickup_date, 0, 7) === substr($selectedDate, 0, 7);
+                list($year, $week) = explode('-W', $selectedDate);
+                return $orderDate->year == $year && $orderDate->week == $week;
             } elseif ($filterType === 'monthly') {
                 return substr($order->pickup_date, 0, 7) === $selectedDate;
             } elseif ($filterType === 'yearly') {
@@ -218,58 +198,6 @@ class AdminController extends Controller
             if (!isset($customerStats[$phone])) {
                 $customerStats[$phone] = [
                     'name' => $order->customer_name,
-                    'phone' => $phone,
-                    'orders' => 0,
-                    'total' => 0
-                ];
-            }
-            $customerStats[$phone]['orders']++;
-            if (in_array($order->status, ['picked_up', 'ready_for_pickup'])) {
-                $customerStats[$phone]['total'] += $order->total_price;
-            }
-        }
-
-        usort($customerStats, fn($a, $b) => $b['total'] <=> $a['total']);
-        return array_slice($customerStats, 0, 5);
-    }
-
-    private function getVerificationData(Request $request)
-    {
-        $statusFilter = $request->get('status_filter', 'All Active');
-        $dateFilter = $request->get('date_filter', '');
-        $perPage = $request->get('per_page', 20);
-
-        $query = Order::with(['user', 'items.menu']);
-
-        if ($statusFilter === 'All Active') {
-            $query->whereIn('status', ['payment_pending', 'ready_for_pickup']);
-        } elseif ($statusFilter !== 'All') {
-            $query->where('status', $statusFilter);
-        }
-
-        if ($dateFilter) {
-            $query->where('pickup_date', $dateFilter);
-        }
-
-        $orders = $query->orderBy('pickup_date', 'desc')->paginate($perPage);
-
-        return [
-            'orders' => $orders,
-            'statusFilter' => $statusFilter,
-            'dateFilter' => $dateFilter,
-            'perPage' => $perPage,
-        ];
-    }
-
-    private function getProductionRecap($date)
-    {
-        $orders = Order::with('items.menu')
-            ->where('pickup_date', $date)
-            ->whereIn('status', ['ready_for_pickup'])
-            ->get();
-
-        $recap = [];
-        foreach ($orders as $order) {
             foreach ($order->items as $item) {
                 $menuId = $item->menu_id;
                 if (!isset($recap[$menuId])) {
@@ -305,69 +233,6 @@ class AdminController extends Controller
                     ->orWhere('invoice_code', 'like', "%{$search}%");
             });
         }
-
-        return $query->get();
-    }
-
-    /**
-     * Get customers - FIXED to show only customers with completed orders
-     */
-    private function getCustomers(Request $request = null)
-    {
-        // FIXED: Only get completed orders for data consistency
-        $orders = Order::with('items.menu')
-            ->whereIn('status', ['picked_up', 'ready_for_pickup'])
-            ->get();
-
-        $customerData = [];
-
-        foreach ($orders as $order) {
-            $phone = $order->customer_phone;
-            if (!isset($customerData[$phone])) {
-                $customerData[$phone] = [
-                    'phone' => $phone,
-                    'name' => $order->customer_name,
-                    'totalOrders' => 0,
-                    'totalSpent' => 0,
-                    'firstSeen' => $order->pickup_date,
-                    'orders' => []
-                ];
-            }
-
-            $customerData[$phone]['totalOrders']++;
-            $customerData[$phone]['totalSpent'] += $order->total_price;
-            $customerData[$phone]['orders'][] = $order;
-
-            if ($order->pickup_date < $customerData[$phone]['firstSeen']) {
-                $customerData[$phone]['firstSeen'] = $order->pickup_date;
-            }
-        }
-
-        usort($customerData, fn($a, $b) => $b['totalSpent'] <=> $a['totalSpent']);
-
-        $perPage = $request ? $request->get('per_page', 20) : 20;
-        $currentPage = $request ? $request->get('page', 1) : 1;
-        $offset = ($currentPage - 1) * $perPage;
-        $paginatedData = array_slice($customerData, $offset, $perPage);
-
-        $paginator = new \Illuminate\Pagination\LengthAwarePaginator(
-            $paginatedData,
-            count($customerData),
-            $perPage,
-            $currentPage,
-            ['path' => $request ? $request->url() : url()->current(), 'query' => $request ? $request->query() : []]
-        );
-
-        return [
-            'customers' => $paginator,
-            'perPage' => $perPage,
-        ];
-    }
-
-    public function acceptOrder(Request $request, Order $order)
-    {
-        $request->validate([
-            'status' => 'required|in:payment_pending,ready_for_pickup,picked_up,cancelled',
             'pickup_date' => 'required|date',
             'admin_note' => 'nullable|string',
             'payment_proof' => 'nullable|image|max:2048',
