@@ -35,12 +35,20 @@ class CartController extends Controller
      */
     public function updateCart(Request $request)
     {
-        if ($request->id && $request->quantity) {
-            $cart = session()->get('cart');
-            $cart[$request->id]["quantity"] = $request->quantity;
+        $validated = $request->validate([
+            'id' => 'required|integer|exists:menus,id',
+            'quantity' => 'required|integer|min:1|max:100'
+        ]);
+
+        $cart = session()->get('cart', []);
+
+        if (isset($cart[$validated['id']])) {
+            $cart[$validated['id']]['quantity'] = $validated['quantity'];
             session()->put('cart', $cart);
+            return redirect()->back()->with('success', 'Cart updated successfully!');
         }
-        return redirect()->back();
+
+        return redirect()->back()->with('error', 'Item not found in cart.');
     }
 
     /**
@@ -48,13 +56,18 @@ class CartController extends Controller
      */
     public function removeCart(Request $request)
     {
-        if ($request->id) {
-            $cart = session()->get('cart');
-            if (isset($cart[$request->id])) {
-                unset($cart[$request->id]);
-                session()->put('cart', $cart);
-            }
+        $validated = $request->validate([
+            'id' => 'required|integer'
+        ]);
+
+        $cart = session()->get('cart', []);
+
+        if (isset($cart[$validated['id']])) {
+            unset($cart[$validated['id']]);
+            session()->put('cart', $cart);
+            return redirect()->back()->with('success', 'Item removed from cart.');
         }
-        return redirect()->back();
+
+        return redirect()->back()->with('error', 'Item not found in cart.');
     }
 }

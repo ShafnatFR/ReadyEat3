@@ -11,7 +11,7 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::table('menus', function (Blueprint $table) {
-            $table->renameColumn('isAvaible', 'isAvailable');
+            $table->string('category')->default('Meal')->after('description');
         });
     }
 
@@ -21,7 +21,7 @@ return new class extends Migration {
     public function down(): void
     {
         Schema::table('menus', function (Blueprint $table) {
-            $table->renameColumn('isAvailable', 'isAvaible');
+            $table->dropColumn('category');
         });
     }
 };

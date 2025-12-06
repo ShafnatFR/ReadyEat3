@@ -17,14 +17,18 @@ class Order extends Model
         'pickup_date',
         'notes',
         'total_price',
-        'admin_note'
+        'admin_note',
+        'payment_proof',
+        'customer_name',
+        'customer_phone',
     ];
 
     public function user()
     {
         return $this->belongsTo(User::class);
     }
-    public function orderItems()
+
+    public function items()
     {
         return $this->hasMany(OrderItem::class);
     }

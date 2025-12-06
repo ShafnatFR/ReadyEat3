@@ -12,13 +12,26 @@ class MenuController extends Controller
      */
     public function home()
     {
-        // Get 8 best products for landing page
+        // Get all products for best seller section
         $bestProducts = Menu::where('isAvailable', true)
+            ->select('id', 'name', 'category', 'price', 'description', 'image')
             ->latest()
             ->limit(8)
             ->get();
 
-        return view('welcome', compact('bestProducts'));
+        // Get featured products for carousel (you can customize these IDs)
+        $featuredProductIds = [1, 2, 3, 4]; // Customize these IDs as needed
+        $featuredProducts = Menu::whereIn('id', $featuredProductIds)
+            ->where('isAvailable', true)
+            ->select('id', 'name', 'category', 'price', 'description', 'image')
+            ->get();
+
+        // If no featured products or less than 4, use best products
+        if ($featuredProducts->count() < 4) {
+            $featuredProducts = $bestProducts->take(4);
+        }
+
+        return view('welcome', compact('bestProducts', 'featuredProducts'));
     }
 
     /**
@@ -28,6 +41,11 @@ class MenuController extends Controller
     {
         // Get all available menus
         $query = Menu::where('isAvailable', true);
+
+        // Apply category filter if requested
+        if ($request->has('category')) {
+            $query->where('category', $request->category);
+        }
 
         // Apply sorting if requested
         if ($request->has('sort')) {
@@ -48,7 +66,7 @@ class MenuController extends Controller
             $query->latest();
         }
 
-        $menus = $query->get();
+        $menus = $query->paginate(12);
 
         // Get cart from session
         $cart = session()->get('cart', []);

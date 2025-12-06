@@ -14,8 +14,8 @@ use App\Http\Controllers\AdminAuthController;
 Route::get('/', [MenuController::class, 'home'])->name('home');
 Route::get('/menus', [MenuController::class, 'index'])->name('menus.index');
 
-// User Authentication (guest only)
-Route::middleware('guest')->group(function () {
+// User Authentication (guest only with rate limiting)
+Route::middleware(['guest', 'throttle:5,1'])->group(function () {
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
 
@@ -31,10 +31,12 @@ Route::middleware('guest')->group(function () {
 // User Logout
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
 
-// Cart Management (no auth required for browsing)
-Route::post('/cart/add/{id}', [CartController::class, 'addToCart'])->name('cart.add');
-Route::patch('/cart/update', [CartController::class, 'updateCart'])->name('cart.update');
-Route::delete('/cart/remove', [CartController::class, 'removeCart'])->name('cart.remove');
+// Cart Management (requires authentication for security with rate limiting)
+Route::middleware(['auth', 'throttle:30,1'])->group(function () {
+    Route::post('/cart/add/{id}', [CartController::class, 'addToCart'])->name('cart.add');
+    Route::patch('/cart/update', [CartController::class, 'updateCart'])->name('cart.update');
+    Route::delete('/cart/remove', [CartController::class, 'removeCart'])->name('cart.remove');
+});
 
 // Checkout (requires authentication)
 Route::middleware('auth')->group(function () {
@@ -52,7 +54,24 @@ Route::prefix('admin')->middleware('guest')->group(function () {
 });
 
 // Protected Admin Routes
-Route::middleware(['auth'])->prefix('admin')->group(function () {
+Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::post('/logout', [AdminAuthController::class, 'logout'])->name('admin.logout');
+
+    // Main Dashboard
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
+
+    // Order Verification
+    Route::post('/orders/{order}/accept', [AdminController::class, 'acceptOrder'])->name('admin.orders.accept');
+    Route::post('/orders/{order}/reject', [AdminController::class, 'rejectOrder'])->name('admin.orders.reject');
+    Route::post('/orders/{order}/upload-proof', [AdminController::class, 'uploadPaymentProof'])->name('admin.orders.upload-proof');
+
+    // Products Management
+    Route::get('/products', [AdminController::class, 'products'])->name('admin.products');
+    Route::post('/products', [AdminController::class, 'storeProduct'])->name('admin.products.store');
+    Route::put('/products/{product}', [AdminController::class, 'updateProduct'])->name('admin.products.update');
+    Route::delete('/products/{product}', [AdminController::class, 'deleteProduct'])->name('admin.products.delete');
+    Route::post('/products/{product}/toggle', [AdminController::class, 'toggleProductAvailability'])->name('admin.products.toggle');
+
+    // Pickup Management
+    Route::post('/orders/{order}/complete', [AdminController::class, 'markAsCompleted'])->name('admin.orders.complete');
 });

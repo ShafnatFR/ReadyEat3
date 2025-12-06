@@ -42,7 +42,15 @@ class OrderController extends Controller
     {
         $request->validate([
             'pickup_date' => 'required|date|after_or_equal:today',
-            'payment_proof' => 'required|image|max:2048',
+            'payment_proof' => [
+                'required',
+                'image',
+                'mimes:jpeg,jpg,png',
+                'max:2048',
+                'dimensions:min_width=100,min_height=100'
+            ],
+            'phone' => 'nullable|string|max:20',
+            'notes' => 'nullable|string|max:500'
         ]);
 
         $cart = session()->get('cart');
@@ -84,6 +92,8 @@ class OrderController extends Controller
                 'pickup_date' => $pickupDate,
                 'notes' => $request->notes,
                 'total_price' => $subtotal + $shipping,
+                'customer_name' => Auth::user()->name,
+                'customer_phone' => $request->phone ?? Auth::user()->phone ?? '-',
             ]);
 
             foreach ($cart as $id => $details) {
@@ -96,7 +106,14 @@ class OrderController extends Controller
             }
 
             if ($request->hasFile('payment_proof')) {
-                $path = $request->file('payment_proof')->store('payments', 'public');
+                // Sanitize filename to prevent security issues
+                $extension = $request->file('payment_proof')->extension();
+                $filename = uniqid() . '_' . time() . '.' . $extension;
+                $path = $request->file('payment_proof')->storeAs('payments', $filename, 'public');
+
+                // Save to order
+                $order->payment_proof = $path;
+                $order->save();
 
                 Payment::create([
                     'order_id' => $order->id,
@@ -113,7 +130,15 @@ class OrderController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->with('error', 'Error: ' . $e->getMessage());
+
+            // Log error for debugging
+            \Log::error('Order creation failed', [
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return back()->with('error', 'Terjadi kesalahan saat memproses pesanan. Silakan coba lagi.');
         }
     }
 

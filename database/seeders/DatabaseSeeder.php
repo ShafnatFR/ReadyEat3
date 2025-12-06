@@ -13,8 +13,8 @@ class DatabaseSeeder extends Seeder
         // 1. Buat Akun Admin
         User::create([
             'name' => 'Administrator',
-            'email' => 'admin@readyeat.com',
-            'password' => Hash::make('password'),
+            'email' => 'admin@gmail.com',
+            'password' => Hash::make('123'),
             'role' => 'admin',
         ]);
 
@@ -24,6 +24,13 @@ class DatabaseSeeder extends Seeder
             'email' => 'shafnat@student.telkom.ac.id',
             'password' => Hash::make('password'),
             'role' => 'customer',
+        ]);
+
+        User::create([
+            'name' => 'Shafnat Admin',
+            'email' => 'admin@readyeat.com',
+            'password' => Hash::make('password'),
+            'role' => 'admin',
         ]);
 
         // 3. Jalankan Seeder Menu (Data dari React)

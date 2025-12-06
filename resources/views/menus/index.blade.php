@@ -31,11 +31,17 @@
             {{-- Product Grid --}}
             <div class="w-full lg:flex-1">
                 <div class="flex flex-wrap items-center justify-between mb-6 gap-4">
-                    <div class="flex items-center space-x-2 rounded-full bg-gray-100 p-1">
-                        <button
-                            class="px-4 py-1.5 rounded-full bg-white shadow text-orange-500 font-semibold">All</button>
-                        <button class="px-4 py-1.5 rounded-full text-gray-600 hover:bg-white/60">Popular</button>
-                        <button class="px-4 py-1.5 rounded-full text-gray-600 hover:bg-white/60">Promo</button>
+                    <div class="flex items-center space-x-2 rounded-full bg-gray-100 p-1 overflow-x-auto">
+                        <a href="{{ route('menus.index', array_merge(request()->except('category'), request()->only('sort'))) }}"
+                            class="px-4 py-1.5 rounded-full whitespace-nowrap {{ !request('category') ? 'bg-white shadow text-orange-500 font-semibold' : 'text-gray-600 hover:bg-white/60' }}">
+                            All
+                        </a>
+                        @foreach (['Meal', 'Snack', 'Drink', 'Dessert', 'Kit'] as $cat)
+                            <a href="{{ route('menus.index', array_merge(request()->except('category'), ['category' => $cat] + request()->only('sort'))) }}"
+                                class="px-4 py-1.5 rounded-full whitespace-nowrap {{ request('category') == $cat ? 'bg-white shadow text-orange-500 font-semibold' : 'text-gray-600 hover:bg-white/60' }}">
+                                {{ $cat }}
+                            </a>
+                        @endforeach
                     </div>
                 </div>
 
@@ -50,7 +56,8 @@
                             </div>
                             <div class="p-4">
                                 <h3 class="text-lg font-bold text-gray-800 line-clamp-1" title="{{ $menu->name }}">
-                                    {{ $menu->name }}</h3>
+                                    {{ $menu->name }}
+                                </h3>
                                 <p class="text-sm text-gray-500 mt-1 h-10 line-clamp-2">{{ $menu->description }}</p>
 
                                 <div class="flex justify-between items-center mt-4">
@@ -73,6 +80,11 @@
                             </div>
                         </div>
                     @endforeach
+                </div>
+
+                {{-- Pagination Links --}}
+                <div class="mt-8">
+                    {{ $menus->links() }}
                 </div>
             </div>
 
@@ -133,7 +145,8 @@
                                 </div>
                                 <div class="text-right">
                                     <p class="font-semibold text-gray-800">Rp
-                                        {{ number_format($details['price'] * $details['quantity'], 0, ',', '.') }}</p>
+                                        {{ number_format($details['price'] * $details['quantity'], 0, ',', '.') }}
+                                    </p>
                                     <form action="{{ route('cart.remove') }}" method="POST" class="inline">
                                         @csrf @method('DELETE')
                                         <input type="hidden" name="id" value="{{ $id }}">
