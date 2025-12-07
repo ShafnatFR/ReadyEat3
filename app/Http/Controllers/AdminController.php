@@ -373,6 +373,8 @@ class AdminController extends Controller
             'payment_proof' => 'nullable|image|max:2048',
         ]);
 
+        $previousStatus = $order->status;
+
         $order->status = $request->status;
         $order->pickup_date = $request->pickup_date;
         $order->admin_note = $request->admin_note;
@@ -383,6 +385,19 @@ class AdminController extends Controller
         }
 
         $order->save();
+
+        // ENHANCED: Send email if status changed to ready_for_pickup
+        if ($previousStatus !== 'ready_for_pickup' && $order->status === 'ready_for_pickup' && $order->user && $order->user->email) {
+            try {
+                \Mail::to($order->user->email)->send(new \App\Mail\OrderReadyForPickup($order));
+                \Log::info('Order ready email sent', ['order_id' => $order->id]);
+            } catch (\Exception $e) {
+                \Log::warning('Failed to send order ready email', [
+                    'order_id' => $order->id,
+                    'error' => $e->getMessage()
+                ]);
+            }
+        }
 
         return back()->with('success', 'Order updated successfully.');
     }
@@ -491,5 +506,153 @@ class AdminController extends Controller
         session(['theme' => $theme === 'light' ? 'dark' : 'light']);
 
         return back();
+    }
+
+    /**
+     * Bulk approve orders - P2 Enhancement
+     */
+    public function bulkApproveOrders(Request $request)
+    {
+        $request->validate([
+            'order_ids' => 'required|array|min:1',
+            'order_ids.*' => 'required|exists:orders,id',
+            'status' => 'required|in:ready_for_pickup',
+            'admin_note' => 'nullable|string|max:500',
+        ]);
+
+        $updated = 0;
+        $errors = [];
+
+        DB::beginTransaction();
+        try {
+            foreach ($request->order_ids as $orderId) {
+                try {
+                    $order = Order::findOrFail($orderId);
+
+                    $previousStatus = $order->status;
+                    $order->status = $request->status;
+                    $order->admin_note = $request->admin_note;
+                    $order->save();
+
+                    // Send email if status changed to ready_for_pickup
+                    if ($previousStatus !== 'ready_for_pickup' && $order->status === 'ready_for_pickup' && $order->user && $order->user->email) {
+                        try {
+                            \Mail::to($order->user->email)->send(new \App\Mail\OrderReadyForPickup($order));
+                        } catch (\Exception $e) {
+                            \Log::warning('Bulk approve email failed', ['order_id' => $order->id]);
+                        }
+                    }
+
+                    $updated++;
+                } catch (\Exception $e) {
+                    $errors[] = "Order #{$orderId}: " . $e->getMessage();
+                }
+            }
+
+            DB::commit();
+
+            $message = "Successfully approved {$updated} order(s).";
+            if (count($errors) > 0) {
+                $message .= " Errors: " . implode(', ', $errors);
+            }
+
+            return back()->with('success', $message);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Bulk approve failed', ['error' => $e->getMessage()]);
+            return back()->with('error', 'Bulk approval failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Bulk reject orders - P2 Enhancement
+     */
+    public function bulkRejectOrders(Request $request)
+    {
+        $request->validate([
+            'order_ids' => 'required|array|min:1',
+            'order_ids.*' => 'required|exists:orders,id',
+            'admin_note' => 'required|string|max:500',
+        ]);
+
+        $updated = 0;
+        $errors = [];
+
+        DB::beginTransaction();
+        try {
+            foreach ($request->order_ids as $orderId) {
+                try {
+                    $order = Order::findOrFail($orderId);
+                    $order->status = 'cancelled';
+                    $order->admin_note = $request->admin_note;
+                    $order->save();
+                    $updated++;
+                } catch (\Exception $e) {
+                    $errors[] = "Order #{$orderId}: " . $e->getMessage();
+                }
+            }
+
+            DB::commit();
+
+            $message = "Successfully rejected {$updated} order(s).";
+            if (count($errors) > 0) {
+                $message .= " Errors: " . implode(', ', $errors);
+            }
+
+            return back()->with('success', $message);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Bulk reject failed', ['error' => $e->getMessage()]);
+            return back()->with('error', 'Bulk rejection failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Bulk update order status - P2 Enhancement
+     */
+    public function bulkUpdateStatus(Request $request)
+    {
+        $request->validate([
+            'order_ids' => 'required|array|min:1',
+            'order_ids.*' => 'required|exists:orders,id',
+            'status' => 'required|in:payment_pending,ready_for_pickup,picked_up,cancelled',
+            'admin_note' => 'nullable|string|max:500',
+        ]);
+
+        $updated = 0;
+        $errors = [];
+
+        DB::beginTransaction();
+        try {
+            foreach ($request->order_ids as $orderId) {
+                try {
+                    $order = Order::findOrFail($orderId);
+                    $order->status = $request->status;
+                    if ($request->admin_note) {
+                        $order->admin_note = $request->admin_note;
+                    }
+                    $order->save();
+                    $updated++;
+                } catch (\Exception $e) {
+                    $errors[] = "Order #{$orderId}: " . $e->getMessage();
+                }
+            }
+
+            DB::commit();
+
+            $message = "Successfully updated {$updated} order(s) to " . str_replace('_', ' ', $request->status) . ".";
+            if (count($errors) > 0) {
+                $message .= " Errors: " . implode(', ', $errors);
+            }
+
+            return back()->with('success', $message);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Bulk status update failed', ['error' => $e->getMessage()]);
+            return back()->with('error', 'Bulk status update failed: ' . $e->getMessage());
+        }
     }
 }

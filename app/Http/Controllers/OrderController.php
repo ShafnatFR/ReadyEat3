@@ -161,11 +161,12 @@ class OrderController extends Controller
                 ])->withInput();
             }
 
-            // Check quota
+            // ENHANCED: Check quota with pessimistic locking (inside transaction later)
+            // This validation will be done again inside transaction for safety
             $bookedQty = OrderItem::where('menu_id', $id)
                 ->whereHas('order', function ($q) use ($pickupDate) {
                     $q->whereDate('pickup_date', $pickupDate)
-                        ->whereIn('status', ['payment_pending', 'ready_for_pickup']); // Only active orders
+                        ->whereIn('status', ['payment_pending', 'ready_for_pickup']);
                 })
                 ->sum('quantity');
 
@@ -203,13 +204,36 @@ class OrderController extends Controller
                 'customer_phone' => $request->phone ?? Auth::user()->phone ?? '-',
             ]);
 
-            // Create order items
+            // ENHANCED: Create order items with quota recheck (pessimistic locking for race condition fix)
             foreach ($cart as $id => $details) {
+                // Lock the menu row for this transaction to prevent race conditions
+                $menu = Menu::where('id', $id)->lockForUpdate()->first();
+
+                if (!$menu) {
+                    throw new \Exception("Menu dengan ID {$id} tidak ditemukan saat pembuatan order.");
+                }
+
+                // Recheck quota inside transaction with lock
+                $bookedQtyInTransaction = OrderItem::where('menu_id', $id)
+                    ->whereHas('order', function ($q) use ($pickupDate) {
+                        $q->whereDate('pickup_date', $pickupDate)
+                            ->whereIn('status', ['payment_pending', 'ready_for_pickup']);
+                    })
+                    ->lockForUpdate() // Lock related order items
+                    ->sum('quantity');
+
+                $dailyLimit = $menu->daily_limit ?? 50;
+
+                if (($bookedQtyInTransaction + $details['quantity']) > $dailyLimit) {
+                    throw new \Exception("Race condition detected: Menu '{$menu->name}' sudah penuh saat pembuatan order.");
+                }
+
+                // Create order item
                 OrderItem::create([
                     'order_id' => $order->id,
                     'menu_id' => $id,
                     'quantity' => $details['quantity'],
-                    'price' => $details['price'], // Use 'price' instead of 'price_at_purchase'
+                    'price_at_purchase' => $details['price'],
                 ]);
             }
 
@@ -276,6 +300,18 @@ class OrderController extends Controller
                 'user_id' => Auth::id(),
                 'total' => $total
             ]);
+
+            // ENHANCED: Send order confirmation email
+            try {
+                \Mail::to(Auth::user()->email)->send(new \App\Mail\OrderConfirmation($order));
+                Log::info('Order confirmation email sent', ['order_id' => $order->id]);
+            } catch (\Exception $e) {
+                // Don't fail if email fails, just log it
+                Log::warning('Failed to send order confirmation email', [
+                    'order_id' => $order->id,
+                    'error' => $e->getMessage()
+                ]);
+            }
 
             return redirect()->route('checkout.success', $order->id)
                 ->with('success', 'Pesanan berhasil dibuat!');

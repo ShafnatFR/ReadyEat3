@@ -1,59 +1,385 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# ReadyEat3 - Food Pre-Order System
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+## 📖 Overview
 
-## About Laravel
+ReadyEat3 is a modern food pre-order and pickup management system built with Laravel 11. The system allows customers to browse menus, place orders, upload payment proofs, and schedule pickups. Admins can manage orders, verify payments, track production, and manage customer pickups through a comprehensive dashboard.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## ✨ Key Features
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+### Customer Features
+- 🍽️ Browse menu with category filtering
+- 🛒 Shopping cart with real-time updates
+- 📅 Schedule pickup dates
+- 💳 QRIS payment integration
+- 📸 Payment proof upload
+- 📧 Email notifications (order confirmation & ready for pickup)
+- ✅ Order tracking
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### Admin Features
+- 📊 Real-time dashboard with analytics
+- 📈 Time-based filtering (daily/weekly/monthly/yearly)
+- ✅ Order verification system
+- 📦 Production planning & tracking
+- 👥 Customer management
+- 🚚 Pickup management
+- 🍴 Menu/product management
+- 📉 Sales reports & statistics
 
-## Learning Laravel
+## 🛠️ Tech Stack
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+- **Framework:** Laravel 11.x
+- **Frontend:** Blade Templates + Alpine.js + Tailwind CSS
+- **Database:** MySQL
+- **Charts:** Chart.js
+- **Authentication:** Laravel Breeze
+- **File Storage:** Laravel Storage (local/S3)
+- **Email:** Laravel Mail (SMTP/Mailgun/SES)
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## 📋 Requirements
 
-## Laravel Sponsors
+- PHP >= 8.2
+- Composer
+- MySQL >= 8.0
+- Node.js >= 18.x & NPM
+- Web Server (Apache/Nginx)
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+## 🚀 Installation
 
-### Premium Partners
+### 1. Clone Repository
+```bash
+git clone https://github.com/yourusername/ReadyEat3.git
+cd ReadyEat3
+```
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+### 2. Install Dependencies
+```bash
+# PHP dependencies
+composer install
 
-## Contributing
+# Node dependencies
+npm install
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### 3. Environment Setup
+```bash
+# Copy environment file
+copy .env.example .env
 
-## Code of Conduct
+# Generate application key
+php artisan key:generate
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### 4. Configure Database
+Edit `.env` file:
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=readyeat3
+DB_USERNAME=root
+DB_PASSWORD=
+```
 
-## Security Vulnerabilities
+### 5. Configure Email (Optional)
+```env
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USERNAME=your-email@gmail.com
+MAIL_PASSWORD=your-app-password
+MAIL_ENCRYPTION=tls
+MAIL_FROM_ADDRESS="noreply@readyeat.com"
+MAIL_FROM_NAME="ReadyEat"
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### 6. Run Migrations
+```bash
+# Run migrations
+php artisan migrate
 
-## License
+# Seed database (optional - adds demo data)
+php artisan db:seed
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### 7. Storage Setup
+```bash
+# Create storage link
+php artisan storage:link
+```
+
+### 8. Build Assets
+```bash
+# Development
+npm run dev
+
+# Production
+npm run build
+```
+
+### 9. Start Server
+```bash
+# Development server
+php artisan serve
+
+# Access at: http://localhost:8000
+```
+
+## 👤 Default Credentials
+
+After seeding:
+
+**Admin:**
+- Email: admin@readyeat.com
+- Password: password
+
+**Customer:**
+- Email: customer@readyeat.com
+- Password: password
+
+## 📚 Usage Guide
+
+### For Customers
+
+1. **Browse Menu:** Visit homepage and explore available dishes
+2. **Add to Cart:** Click "Add to Cart" on desired items
+3. **Checkout:** 
+   - Select pickup date
+   - Scan QRIS code
+   - Upload payment proof
+   - Add notes (optional)
+4. **Track Order:** Check email for order confirmation
+5. **Pickup:** Bring invoice code on scheduled date
+
+### For Admins
+
+1. **Login:** Navigate to `/admin/login`
+2. **Dashboard:**
+   - View statistics (revenue, orders, customers)
+   - Filter by time period
+   - See top products & customers
+3. **Verification Tab:**
+   - Review pending payments
+   - Accept/reject orders
+   - Add admin notes
+4. **Production Tab:**
+   - View production plan
+   - Track quota utilization
+5. **Pickup Tab:**
+   - Monitor ready orders
+   - Mark as completed
+6. **Products Tab:**
+   - Add/edit/delete menu items
+   - Toggle availability
+   - Set daily limits
+
+## 🔧 Configuration
+
+### Menu Management
+```php
+// Set daily quota for menu item
+Menu::find(1)->update(['daily_limit' => 50]);
+
+// Toggle availability
+Menu::find(1)->update(['isAvailable' => false]);
+```
+
+### Order Statuses
+- `payment_pending` - Waiting for payment verification
+- `ready_for_pickup` - Payment approved, ready for pickup
+- `picked_up` - Customer has picked up order
+- `cancelled` - Order cancelled
+
+## 🗄️ Database Management
+
+### Backup Database
+```bash
+# Manual backup
+php artisan db:backup
+
+# Keep 14 days of backups
+php artisan db:backup --keep=14
+
+# Custom path
+php artisan db:backup --path=my-backups
+```
+
+### Clean Dummy Data
+```bash
+# View statistics and confirm
+php artisan db:clean-dummy
+
+# Force delete without confirmation
+php artisan db:clean-dummy --force
+
+# Keep 50 recent orders
+php artisan db:clean-dummy --force --keep-recent=50
+```
+
+### Schedule Automatic Backup
+Edit `app/Console/Kernel.php`:
+```php
+protected function schedule(Schedule $schedule)
+{
+    $schedule->command('db:backup')->daily()->at('02:00');
+}
+```
+
+## 🧪 Testing
+
+```bash
+# Run all tests
+php artisan test
+
+# Run specific test file
+php artisan test --filter CheckoutTest
+
+# With coverage
+php artisan test --coverage
+```
+
+## 📊 Performance
+
+### Database Indexes
+Automatically optimized with indexes on:
+- `orders.pickup_date`
+- `orders.status`
+- `orders.customer_phone`
+- `order_items.menu_id`
+- `menus.isAvailable`
+- Composite indexes for common queries
+
+### Optimization Tips
+```bash
+# Cache config
+php artisan config:cache
+
+# Cache routes
+php artisan route:cache
+
+# Cache views
+php artisan view:cache
+
+# Optimize autoloader
+composer dump-autoload --optimize
+```
+
+## 🔒 Security
+
+- ✅ CSRF Protection
+- ✅ SQL Injection Prevention (Eloquent ORM)
+- ✅ XSS Protection (Blade escaping)
+- ✅ File Upload Validation
+- ✅ Rate Limiting
+- ✅ Password Hashing (Bcrypt)
+- ✅ Pessimistic Locking (Race Condition Prevention)
+
+## 📁 Project Structure
+
+```
+ReadyEat3/
+├── app/
+│   ├── Console/Commands/      # Artisan commands (backup, cleanup)
+│   ├── Http/Controllers/      # Application controllers
+│   ├── Mail/                  # Email classes
+│   ├── Models/                # Eloquent models
+│   └── ...
+├── database/
+│   ├── migrations/            # Database migrations
+│   └── seeders/               # Database seeders
+├── resources/
+│   ├── views/                 # Blade templates
+│   │   ├── admin/            # Admin dashboard views
+│   │   ├── auth/             # Authentication views
+│   │   ├── checkout/         # Checkout flow
+│   │   ├── emails/           # Email templates
+│   │   └── menus/            # Menu listing
+│   └── css/                   # Stylesheets
+├── routes/
+│   └── web.php               # Web routes
+├── storage/
+│   └── app/
+│       ├── backups/          # Database backups
+│       └── public/           # Public file storage
+└── tests/
+    └── Feature/              # Feature tests
+```
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+**Database connection error:**
+```bash
+# Check .env configuration
+# Ensure MySQL is running
+# Test connection: php artisan migrate:status
+```
+
+**Storage permission error:**
+```bash
+# Windows
+icacls storage /grant Users:F /T
+icacls bootstrap/cache /grant Users:F /T
+
+# Linux/Mac
+chmod -R 775 storage bootstrap/cache
+```
+
+**Email not sending:**
+```bash
+# Check .env MAIL_ configuration
+# Test with: php artisan tinker
+Mail::raw('Test', function($msg) {
+    $msg->to('test@example.com')->subject('Test');
+});
+```
+
+## 📝 API Endpoints (For Future Development)
+
+Currently using web routes. For API development:
+
+```php
+// routes/api.php
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/orders', [OrderController::class, 'index']);
+    Route::post('/orders', [OrderController::class, 'store']);
+    Route::get('/menus', [MenuController::class, 'index']);
+});
+```
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+## 👨‍💻 Author
+
+**Your Name**
+- GitHub: [@yourusername](https://github.com/yourusername)
+- Email: your.email@example.com
+
+## 🙏 Acknowledgments
+
+- Laravel Framework
+- Tailwind CSS
+- Alpine.js
+- Chart.js
+- All contributors
+
+## 📞 Support
+
+For support:
+- 📧 Email: support@readyeat.com
+- 📱 Phone: +62 812-3456-7890
+- 💬 GitHub Issues: [Create an issue](https://github.com/yourusername/ReadyEat3/issues)
+
+---
+
+**Made with ❤️ using Laravel**

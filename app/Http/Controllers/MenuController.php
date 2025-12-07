@@ -3,10 +3,18 @@
 namespace App\Http\Controllers;
 
 use App\Models\Menu;
+use App\Services\MenuService;
 use Illuminate\Http\Request;
 
 class MenuController extends Controller
 {
+    protected $menuService;
+
+    public function __construct(MenuService $menuService)
+    {
+        $this->menuService = $menuService;
+    }
+
     /**
      * Display landing page
      */
@@ -19,14 +27,13 @@ class MenuController extends Controller
             ->limit(8)
             ->get();
 
-        // Get featured products for carousel (you can customize these IDs)
-        $featuredProductIds = [1, 2, 3, 4]; // Customize these IDs as needed
+        // Get featured products for carousel
+        $featuredProductIds = [1, 2, 3, 4];
         $featuredProducts = Menu::whereIn('id', $featuredProductIds)
             ->where('isAvailable', true)
             ->select('id', 'name', 'category', 'price', 'description', 'image')
             ->get();
 
-        // If no featured products or less than 4, use best products
         if ($featuredProducts->count() < 4) {
             $featuredProducts = $bestProducts->take(4);
         }
@@ -35,19 +42,27 @@ class MenuController extends Controller
     }
 
     /**
-     * Display product listing page with cart
+     * Display product listing page with search and filters - P3 Enhancement
      */
     public function index(Request $request)
     {
-        // Get all available menus
         $query = Menu::where('isAvailable', true);
 
-        // Apply category filter if requested
-        if ($request->has('category')) {
+        // P3: Search functionality
+        if ($request->has('search') && $request->search) {
+            $searchTerm = $request->search;
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('name', 'like', "%{$searchTerm}%")
+                    ->orWhere('description', 'like', "%{$searchTerm}%");
+            });
+        }
+
+        // Category filter
+        if ($request->has('category') && $request->category) {
             $query->where('category', $request->category);
         }
 
-        // Apply sorting if requested
+        // Sorting
         if ($request->has('sort')) {
             switch ($request->sort) {
                 case 'price_low':
@@ -68,6 +83,9 @@ class MenuController extends Controller
 
         $menus = $query->paginate(12);
 
+        // Get categories for filter dropdown
+        $categories = $this->menuService->getCategories();
+
         // Get cart from session
         $cart = session()->get('cart', []);
 
@@ -80,6 +98,6 @@ class MenuController extends Controller
         $shipping = $subtotal > 0 ? 15000 : 0;
         $total = $subtotal + $shipping;
 
-        return view('menus.index', compact('menus', 'cart', 'subtotal', 'shipping', 'total'));
+        return view('menus.index', compact('menus', 'cart', 'subtotal', 'shipping', 'total', 'categories'));
     }
 }

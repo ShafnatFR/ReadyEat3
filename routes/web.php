@@ -7,6 +7,7 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AdminAuthController;
+use App\Http\Controllers\UserAccountController;
 
 // ===== GUEST ROUTES =====
 
@@ -45,6 +46,13 @@ Route::middleware('auth')->group(function () {
     Route::get('/checkout/success/{id}', [OrderController::class, 'success'])->name('checkout.success');
 });
 
+// User Account Management (requires authentication)
+Route::middleware('auth')->group(function () {
+    Route::get('/account', [UserAccountController::class, 'index'])->name('account.index');
+    Route::patch('/account/profile', [UserAccountController::class, 'updateProfile'])->name('account.profile.update');
+    Route::patch('/account/password', [UserAccountController::class, 'updatePassword'])->name('account.password.update');
+});
+
 // ===== ADMIN ROUTES =====
 
 // Admin Login (guest only)
@@ -64,6 +72,11 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::post('/orders/{order}/accept', [AdminController::class, 'acceptOrder'])->name('admin.orders.accept');
     Route::post('/orders/{order}/reject', [AdminController::class, 'rejectOrder'])->name('admin.orders.reject');
     Route::post('/orders/{order}/upload-proof', [AdminController::class, 'uploadPaymentProof'])->name('admin.orders.upload-proof');
+
+    // Bulk Operations - P2 Enhancement
+    Route::post('/orders/bulk-approve', [AdminController::class, 'bulkApproveOrders'])->name('admin.orders.bulk-approve');
+    Route::post('/orders/bulk-reject', [AdminController::class, 'bulkRejectOrders'])->name('admin.orders.bulk-reject');
+    Route::post('/orders/bulk-status', [AdminController::class, 'bulkUpdateStatus'])->name('admin.orders.bulk-status');
 
     // Products Management
     Route::get('/products', [AdminController::class, 'products'])->name('admin.products');

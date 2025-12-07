@@ -12,8 +12,14 @@ class Payment extends Model
     protected $table = 'payment';
 
     protected $fillable = [
-        'order_id', 'prof_image', 'amount'
+        'order_id',
+        'proof_image',  // Fixed typo: was 'prof_image'
+        'amount',
+        'status'        // Added missing status field
     ];
 
-    public function order() { return $this->belongsTo(Order::class); }
+    public function order()
+    {
+        return $this->belongsTo(Order::class);
+    }
 }
