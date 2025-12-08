@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="{{ $theme === 'dark' ? 'dark' : '' }}">
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
@@ -31,6 +31,21 @@
 
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
+    {{-- Theme Initialization Script - Must run before page render to prevent flash --}}
+    <script>
+            // Initialize theme from localStorage before page renders
+            (function () {
+                const savedTheme = localStorage.getItem('theme');
+                const theme = savedTheme || 'light';
+
+                if (theme === 'dark') {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            })();
+    </script>
+
     <style>
         [x-cloak] {
             display: none !important;
@@ -46,7 +61,22 @@
 
 <body
     class="font-sans antialiased bg-gray-100 dark:bg-gray-900 min-h-screen text-gray-900 dark:text-gray-100 transition-colors duration-200"
-    x-data="{ darkMode: {{ $theme === 'dark' ? 'true' : 'false' }}, mobileMenuOpen: false, selectedOrderId: null, editModalOpen: false, editingProduct: null }">
+    x-data="{ 
+        darkMode: localStorage.getItem('theme') === 'dark',
+        mobileMenuOpen: false, 
+        selectedOrderId: null, 
+        editModalOpen: false, 
+        editingProduct: null 
+    }" x-init="
+        $watch('darkMode', value => {
+            localStorage.setItem('theme', value ? 'dark' : 'light');
+            if (value) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        })
+    ">
 
     {{-- Header --}}
     <header
@@ -55,7 +85,7 @@
             <div class="flex items-center justify-between h-16">
                 <h1 class="text-xl font-bold text-gray-900 dark:text-white">Admin Panel</h1>
                 <nav class="hidden md:flex items-center space-x-4">
-                    <button @click="darkMode = !darkMode; document.documentElement.classList.toggle('dark')"
+                    <button @click="darkMode = !darkMode"
                         class="p-2 rounded-full text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700 transition-colors">
                         <svg x-show="darkMode" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                             stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
@@ -129,7 +159,7 @@
                     @foreach(['dashboard', 'verification', 'production', 'products', 'pickup', 'customers'] as $tabName)
                         <a href="{{ route('admin.dashboard', ['tab' => $tabName]) }}"
                             class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm capitalize
-                                      {{ $tab === $tabName ? 'border-primary text-primary' : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200' }}">
+                                                  {{ $tab === $tabName ? 'border-primary text-primary' : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200' }}">
                             {{ ucfirst($tabName) }}
                         </a>
                     @endforeach

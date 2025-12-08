@@ -46,11 +46,11 @@
                     <td class="p-4">Rp {{ number_format($order->total_price, 0, ',', '.') }}</td>
                     <td class="p-4">
                         <span class="px-2 py-1 text-xs rounded-full 
-                                    {{ $order->status === 'payment_pending' ? 'bg-yellow-100 text-yellow-800' : '' }}
-                                    {{ $order->status === 'ready_for_pickup' ? 'bg-blue-100 text-blue-800' : '' }}
-                                    {{ $order->status === 'picked_up' ? 'bg-green-100 text-green-800' : '' }}
-                                    {{ $order->status === 'cancelled' ? 'bg-red-100 text-red-800' : '' }}
-                                    {{ $order->status === 'unpaid' ? 'bg-gray-100 text-gray-800' : '' }}">
+                                        {{ $order->status === 'payment_pending' ? 'bg-yellow-100 text-yellow-800' : '' }}
+                                        {{ $order->status === 'ready_for_pickup' ? 'bg-blue-100 text-blue-800' : '' }}
+                                        {{ $order->status === 'picked_up' ? 'bg-green-100 text-green-800' : '' }}
+                                        {{ $order->status === 'cancelled' ? 'bg-red-100 text-red-800' : '' }}
+                                        {{ $order->status === 'unpaid' ? 'bg-gray-100 text-gray-800' : '' }}">
                             {{ ucfirst(str_replace('_', ' ', $order->status)) }}
                         </span>
                     </td>
@@ -224,7 +224,7 @@
                                         Close
                                     </button>
 
-                                    <a :href="`{{ route('admin.orders.invoice', '') }}/${selectedOrderId}`" target="_blank"
+                                    <a :href="`{{ url('admin/orders') }}/${selectedOrderId}/invoice`" target="_blank"
                                         class="px-4 py-2 bg-blue-600 text-white rounded-md font-semibold hover:bg-blue-700 transition-colors inline-flex items-center gap-2">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
