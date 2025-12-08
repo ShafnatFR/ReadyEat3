@@ -14,6 +14,12 @@
                     <input type="date" name="pickup_date" :value="pickupDate"
                         class="flex-1 p-2 border rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
                     <button type="submit" class="px-4 bg-primary text-white rounded hover:bg-orange-600">Filter</button>
+                    <a href="{{ route('admin.pickup.print') }}?date={{ request()->get('pickup_date', date('Y-m-d')) }}" target="_blank" 
+                       class="px-4 bg-gray-600 text-white rounded hover:bg-gray-700 flex items-center justify-center" title="Print Pickup List">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+                        </svg>
+                    </a>
                 </div>
             </div>
         </form>
@@ -48,13 +54,21 @@
                         <p class="text-lg font-bold text-gray-900 dark:text-white mb-4">Total: Rp
                             {{ number_format($order->total_price, 0, ',', '.') }}</p>
                     </div>
-                    <form method="POST" action="{{ route('admin.orders.complete', $order) }}">
-                        @csrf
-                        <button type="submit"
-                            class="w-full bg-primary text-white py-4 rounded-lg text-lg font-bold hover:bg-orange-600 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
-                            Mark as Picked Up
-                        </button>
-                    </form>
+                    <div class="flex gap-2">
+                        <form method="POST" action="{{ route('admin.orders.complete', $order) }}" class="flex-1">
+                            @csrf
+                            <button type="submit"
+                                class="w-full bg-primary text-white py-4 rounded-lg text-lg font-bold hover:bg-orange-600 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                                Mark as Picked Up
+                            </button>
+                        </form>
+                        <a href="{{ route('admin.orders.invoice', $order) }}" target="_blank"
+                            class="bg-blue-600 text-white px-4 rounded-lg flex items-center justify-center hover:bg-blue-700 transition-colors" title="Print Invoice">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+                            </svg>
+                        </a>
+                    </div>
                 </div>
             @endforeach
         </div>

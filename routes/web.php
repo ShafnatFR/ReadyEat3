@@ -87,4 +87,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
 
     // Pickup Management
     Route::post('/orders/{order}/complete', [AdminController::class, 'markAsCompleted'])->name('admin.orders.complete');
+
+    // Print Features
+    Route::get('/orders/{order}/invoice', [AdminController::class, 'printInvoice'])->name('admin.orders.invoice');
+    Route::get('/production/print', [AdminController::class, 'printProduction'])->name('admin.production.print');
+    Route::get('/pickup/print', [AdminController::class, 'printPickup'])->name('admin.pickup.print');
 });

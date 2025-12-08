@@ -46,11 +46,11 @@
                     <td class="p-4">Rp {{ number_format($order->total_price, 0, ',', '.') }}</td>
                     <td class="p-4">
                         <span class="px-2 py-1 text-xs rounded-full 
-                                {{ $order->status === 'payment_pending' ? 'bg-yellow-100 text-yellow-800' : '' }}
-                                {{ $order->status === 'ready_for_pickup' ? 'bg-blue-100 text-blue-800' : '' }}
-                                {{ $order->status === 'picked_up' ? 'bg-green-100 text-green-800' : '' }}
-                                {{ $order->status === 'cancelled' ? 'bg-red-100 text-red-800' : '' }}
-                                {{ $order->status === 'unpaid' ? 'bg-gray-100 text-gray-800' : '' }}">
+                                    {{ $order->status === 'payment_pending' ? 'bg-yellow-100 text-yellow-800' : '' }}
+                                    {{ $order->status === 'ready_for_pickup' ? 'bg-blue-100 text-blue-800' : '' }}
+                                    {{ $order->status === 'picked_up' ? 'bg-green-100 text-green-800' : '' }}
+                                    {{ $order->status === 'cancelled' ? 'bg-red-100 text-red-800' : '' }}
+                                    {{ $order->status === 'unpaid' ? 'bg-gray-100 text-gray-800' : '' }}">
                             {{ ucfirst(str_replace('_', ' ', $order->status)) }}
                         </span>
                     </td>
@@ -98,7 +98,8 @@
                                         <div><strong class="text-gray-800 dark:text-gray-300">Phone:</strong>
                                             {{ $order->customer_phone }}</div>
                                         <div><strong class="text-gray-800 dark:text-gray-300">Total:</strong> Rp
-                                            {{ number_format($order->total_price, 0, ',', '.') }}</div>
+                                            {{ number_format($order->total_price, 0, ',', '.') }}
+                                        </div>
 
                                         <div class="space-y-2">
                                             <strong class="text-gray-800 dark:text-gray-300">Items:</strong>
@@ -222,6 +223,16 @@
                                         class="px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-900 dark:text-white rounded-md font-semibold hover:bg-gray-400 dark:hover:bg-gray-500 transition-colors">
                                         Close
                                     </button>
+
+                                    <a :href="`{{ route('admin.orders.invoice', '') }}/${selectedOrderId}`" target="_blank"
+                                        class="px-4 py-2 bg-blue-600 text-white rounded-md font-semibold hover:bg-blue-700 transition-colors inline-flex items-center gap-2">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z">
+                                            </path>
+                                        </svg>
+                                        Print Invoice
+                                    </a>
 
                                     @if($order->status === 'payment_pending')
                                         <form method="POST" action="{{ route('admin.orders.reject', $order) }}" class="inline"

@@ -1,385 +1,107 @@
-# ReadyEat3 - Food Pre-Order System
+# ReadyEat3 🍔
 
-## 📖 Overview
+ReadyEat3 is a modern food ordering application built with **Laravel 12** and **Tailwind CSS 4**. It features a robust backend for managing menus, orders, and payments, and a responsive frontend for customers to browse and order food.
 
-ReadyEat3 is a modern food pre-order and pickup management system built with Laravel 11. The system allows customers to browse menus, place orders, upload payment proofs, and schedule pickups. Admins can manage orders, verify payments, track production, and manage customer pickups through a comprehensive dashboard.
+## 📚 Documentation
 
-## ✨ Key Features
+- [Database Schema & Architecture](docs/DATABASE_SCHEMA.md)
 
-### Customer Features
-- 🍽️ Browse menu with category filtering
-- 🛒 Shopping cart with real-time updates
-- 📅 Schedule pickup dates
-- 💳 QRIS payment integration
-- 📸 Payment proof upload
-- 📧 Email notifications (order confirmation & ready for pickup)
-- ✅ Order tracking
+## 🚀 Tech Stack
 
-### Admin Features
-- 📊 Real-time dashboard with analytics
-- 📈 Time-based filtering (daily/weekly/monthly/yearly)
-- ✅ Order verification system
-- 📦 Production planning & tracking
-- 👥 Customer management
-- 🚚 Pickup management
-- 🍴 Menu/product management
-- 📉 Sales reports & statistics
+- **Framework**: Laravel 12
+- **Language**: PHP 8.2+
+- **Database**: MySQL
+- **Frontend**: Blade, React, Tailwind CSS 4
+- **Build Tool**: Vite
 
-## 🛠️ Tech Stack
+## 🛠️ Prerequisites
 
-- **Framework:** Laravel 11.x
-- **Frontend:** Blade Templates + Alpine.js + Tailwind CSS
-- **Database:** MySQL
-- **Charts:** Chart.js
-- **Authentication:** Laravel Breeze
-- **File Storage:** Laravel Storage (local/S3)
-- **Email:** Laravel Mail (SMTP/Mailgun/SES)
+Ensure you have the following installed on your machine:
+- [PHP 8.2+](https://www.php.net/downloads)
+- [Composer](https://getcomposer.org/)
+- [Node.js & npm](https://nodejs.org/)
+- [MySQL](https://www.mysql.com/)
 
-## 📋 Requirements
+## 💿 Installation
 
-- PHP >= 8.2
-- Composer
-- MySQL >= 8.0
-- Node.js >= 18.x & NPM
-- Web Server (Apache/Nginx)
+1.  **Clone the repository**
+    ```bash
+    git clone https://github.com/ShafnatFR/ReadyEat3.git
+    cd ReadyEat3
+    ```
 
-## 🚀 Installation
+2.  **Install PHP dependencies**
+    ```bash
+    composer install
+    ```
 
-### 1. Clone Repository
-```bash
-git clone https://github.com/yourusername/ReadyEat3.git
-cd ReadyEat3
-```
+3.  **Install Node.js dependencies**
+    ```bash
+    npm install
+    ```
 
-### 2. Install Dependencies
-```bash
-# PHP dependencies
-composer install
+4.  **Environment Setup**
+    Copy the example environment file and configure your database credentials.
+    ```bash
+    cp .env.example .env
+    ```
+    Open `.env` and update the database settings:
+    ```env
+    DB_CONNECTION=mysql
+    DB_HOST=127.0.0.1
+    DB_PORT=3306
+    DB_DATABASE=readyeat3
+    DB_USERNAME=root
+    DB_PASSWORD=
+    ```
 
-# Node dependencies
-npm install
-```
+5.  **Generate Application Key**
+    ```bash
+    php artisan key:generate
+    ```
 
-### 3. Environment Setup
-```bash
-# Copy environment file
-copy .env.example .env
+6.  **Run Migrations & Seeders**
+    Set up the database tables and populate them with initial data.
+    ```bash
+    php artisan migrate --seed
+    ```
 
-# Generate application key
-php artisan key:generate
-```
+7.  **Build Assets**
+    Compile the frontend assets.
+    ```bash
+    npm run build
+    ```
 
-### 4. Configure Database
-Edit `.env` file:
-```env
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=readyeat3
-DB_USERNAME=root
-DB_PASSWORD=
-```
+## 🏁 Running the Application
 
-### 5. Configure Email (Optional)
-```env
-MAIL_MAILER=smtp
-MAIL_HOST=smtp.gmail.com
-MAIL_PORT=587
-MAIL_USERNAME=your-email@gmail.com
-MAIL_PASSWORD=your-app-password
-MAIL_ENCRYPTION=tls
-MAIL_FROM_ADDRESS="noreply@readyeat.com"
-MAIL_FROM_NAME="ReadyEat"
-```
+1.  **Start the Laravel Development Server**
+    ```bash
+    php artisan serve
+    ```
 
-### 6. Run Migrations
-```bash
-# Run migrations
-php artisan migrate
+2.  **Start the Vite Development Server** (for hot module replacement)
+    ```bash
+    npm run dev
+    ```
 
-# Seed database (optional - adds demo data)
-php artisan db:seed
-```
-
-### 7. Storage Setup
-```bash
-# Create storage link
-php artisan storage:link
-```
-
-### 8. Build Assets
-```bash
-# Development
-npm run dev
-
-# Production
-npm run build
-```
-
-### 9. Start Server
-```bash
-# Development server
-php artisan serve
-
-# Access at: http://localhost:8000
-```
-
-## 👤 Default Credentials
-
-After seeding:
-
-**Admin:**
-- Email: admin@readyeat.com
-- Password: password
-
-**Customer:**
-- Email: customer@readyeat.com
-- Password: password
-
-## 📚 Usage Guide
-
-### For Customers
-
-1. **Browse Menu:** Visit homepage and explore available dishes
-2. **Add to Cart:** Click "Add to Cart" on desired items
-3. **Checkout:** 
-   - Select pickup date
-   - Scan QRIS code
-   - Upload payment proof
-   - Add notes (optional)
-4. **Track Order:** Check email for order confirmation
-5. **Pickup:** Bring invoice code on scheduled date
-
-### For Admins
-
-1. **Login:** Navigate to `/admin/login`
-2. **Dashboard:**
-   - View statistics (revenue, orders, customers)
-   - Filter by time period
-   - See top products & customers
-3. **Verification Tab:**
-   - Review pending payments
-   - Accept/reject orders
-   - Add admin notes
-4. **Production Tab:**
-   - View production plan
-   - Track quota utilization
-5. **Pickup Tab:**
-   - Monitor ready orders
-   - Mark as completed
-6. **Products Tab:**
-   - Add/edit/delete menu items
-   - Toggle availability
-   - Set daily limits
-
-## 🔧 Configuration
-
-### Menu Management
-```php
-// Set daily quota for menu item
-Menu::find(1)->update(['daily_limit' => 50]);
-
-// Toggle availability
-Menu::find(1)->update(['isAvailable' => false]);
-```
-
-### Order Statuses
-- `payment_pending` - Waiting for payment verification
-- `ready_for_pickup` - Payment approved, ready for pickup
-- `picked_up` - Customer has picked up order
-- `cancelled` - Order cancelled
-
-## 🗄️ Database Management
-
-### Backup Database
-```bash
-# Manual backup
-php artisan db:backup
-
-# Keep 14 days of backups
-php artisan db:backup --keep=14
-
-# Custom path
-php artisan db:backup --path=my-backups
-```
-
-### Clean Dummy Data
-```bash
-# View statistics and confirm
-php artisan db:clean-dummy
-
-# Force delete without confirmation
-php artisan db:clean-dummy --force
-
-# Keep 50 recent orders
-php artisan db:clean-dummy --force --keep-recent=50
-```
-
-### Schedule Automatic Backup
-Edit `app/Console/Kernel.php`:
-```php
-protected function schedule(Schedule $schedule)
-{
-    $schedule->command('db:backup')->daily()->at('02:00');
-}
-```
+3.  Access the application at `http://localhost:8000`.
 
 ## 🧪 Testing
 
+Run the test suite to ensure everything is working correctly.
+
 ```bash
-# Run all tests
 php artisan test
-
-# Run specific test file
-php artisan test --filter CheckoutTest
-
-# With coverage
-php artisan test --coverage
 ```
 
-## 📊 Performance
+## 📂 Project Structure
 
-### Database Indexes
-Automatically optimized with indexes on:
-- `orders.pickup_date`
-- `orders.status`
-- `orders.customer_phone`
-- `order_items.menu_id`
-- `menus.isAvailable`
-- Composite indexes for common queries
-
-### Optimization Tips
-```bash
-# Cache config
-php artisan config:cache
-
-# Cache routes
-php artisan route:cache
-
-# Cache views
-php artisan view:cache
-
-# Optimize autoloader
-composer dump-autoload --optimize
-```
-
-## 🔒 Security
-
-- ✅ CSRF Protection
-- ✅ SQL Injection Prevention (Eloquent ORM)
-- ✅ XSS Protection (Blade escaping)
-- ✅ File Upload Validation
-- ✅ Rate Limiting
-- ✅ Password Hashing (Bcrypt)
-- ✅ Pessimistic Locking (Race Condition Prevention)
-
-## 📁 Project Structure
-
-```
-ReadyEat3/
-├── app/
-│   ├── Console/Commands/      # Artisan commands (backup, cleanup)
-│   ├── Http/Controllers/      # Application controllers
-│   ├── Mail/                  # Email classes
-│   ├── Models/                # Eloquent models
-│   └── ...
-├── database/
-│   ├── migrations/            # Database migrations
-│   └── seeders/               # Database seeders
-├── resources/
-│   ├── views/                 # Blade templates
-│   │   ├── admin/            # Admin dashboard views
-│   │   ├── auth/             # Authentication views
-│   │   ├── checkout/         # Checkout flow
-│   │   ├── emails/           # Email templates
-│   │   └── menus/            # Menu listing
-│   └── css/                   # Stylesheets
-├── routes/
-│   └── web.php               # Web routes
-├── storage/
-│   └── app/
-│       ├── backups/          # Database backups
-│       └── public/           # Public file storage
-└── tests/
-    └── Feature/              # Feature tests
-```
-
-## 🐛 Troubleshooting
-
-### Common Issues
-
-**Database connection error:**
-```bash
-# Check .env configuration
-# Ensure MySQL is running
-# Test connection: php artisan migrate:status
-```
-
-**Storage permission error:**
-```bash
-# Windows
-icacls storage /grant Users:F /T
-icacls bootstrap/cache /grant Users:F /T
-
-# Linux/Mac
-chmod -R 775 storage bootstrap/cache
-```
-
-**Email not sending:**
-```bash
-# Check .env MAIL_ configuration
-# Test with: php artisan tinker
-Mail::raw('Test', function($msg) {
-    $msg->to('test@example.com')->subject('Test');
-});
-```
-
-## 📝 API Endpoints (For Future Development)
-
-Currently using web routes. For API development:
-
-```php
-// routes/api.php
-Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/orders', [OrderController::class, 'index']);
-    Route::post('/orders', [OrderController::class, 'store']);
-    Route::get('/menus', [MenuController::class, 'index']);
-});
-```
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+- `app/Models`: Eloquent models (User, Menu, Order, Payment).
+- `app/Http/Controllers`: Logic for handling requests (Admin & Customer).
+- `database/migrations`: Database schema definitions.
+- `resources/views`: Blade templates.
+- `routes/web.php`: Application routes.
 
 ## 📄 License
 
-This project is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
-
-## 👨‍💻 Author
-
-**Your Name**
-- GitHub: [@yourusername](https://github.com/yourusername)
-- Email: your.email@example.com
-
-## 🙏 Acknowledgments
-
-- Laravel Framework
-- Tailwind CSS
-- Alpine.js
-- Chart.js
-- All contributors
-
-## 📞 Support
-
-For support:
-- 📧 Email: support@readyeat.com
-- 📱 Phone: +62 812-3456-7890
-- 💬 GitHub Issues: [Create an issue](https://github.com/yourusername/ReadyEat3/issues)
-
----
-
-**Made with ❤️ using Laravel**
+The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).

@@ -9,7 +9,15 @@
                     class="bg-white dark:bg-gray-700 border rounded-md px-2 py-1 text-gray-900 dark:text-white">
                 <button type="submit" class="bg-primary text-white px-3 py-1 rounded">Load</button>
             </form>
-            <button onclick="window.print()" class="bg-primary text-white px-3 py-1 rounded">Print</button>
+            <button onclick="window.open('{{ route('admin.production.print') }}?date={{ $productionDate }}', '_blank')"
+                class="bg-primary text-white px-3 py-1 rounded flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z">
+                    </path>
+                </svg>
+                Print Recap
+            </button>
         </div>
     </div>
 

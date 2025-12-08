@@ -655,4 +655,30 @@ class AdminController extends Controller
             return back()->with('error', 'Bulk status update failed: ' . $e->getMessage());
         }
     }
+    // ===== PRINT FEATURES =====
+
+    public function printInvoice(Order $order)
+    {
+        return view('admin.print.invoice', compact('order'));
+    }
+
+    public function printProduction(Request $request)
+    {
+        $date = $request->get('date', Carbon::today()->toDateString());
+        $productionRecap = $this->getProductionRecap($date);
+
+        return view('admin.print.production', compact('productionRecap', 'date'));
+    }
+
+    public function printPickup(Request $request)
+    {
+        $date = $request->get('date', Carbon::today()->toDateString());
+        $pickupOrders = Order::with(['items.menu', 'user'])
+            ->whereDate('pickup_date', $date)
+            ->whereIn('status', ['ready_for_pickup', 'picked_up'])
+            ->orderBy('pickup_date', 'asc')
+            ->get();
+
+        return view('admin.print.pickup', compact('pickupOrders', 'date'));
+    }
 }
