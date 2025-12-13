@@ -30,8 +30,14 @@
                     <td class="p-4">
                         <form method="POST" action="{{ route('admin.products.toggle', $product) }}">
                             @csrf
-                            <input type="checkbox" {{ $product->isAvailable ? 'checked' : '' }}
-                                onchange="this.form.submit()" class="rounded text-primary focus:ring-primary">
+                            <label
+                                class="relative inline-flex items-center cursor-pointer hover:opacity-80 transition-opacity"
+                                title="Click to toggle availability">
+                                <input type="checkbox" onchange="this.form.submit()" class="sr-only peer" {{ $product->isAvailable ? 'checked' : '' }}>
+                                <div
+                                    class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 dark:peer-focus:ring-orange-800 rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary">
+                                </div>
+                            </label>
                         </form>
                     </td>
                     <td class="p-4 flex gap-2">
