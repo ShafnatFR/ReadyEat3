@@ -13,7 +13,7 @@ class MenuService
     public function search(string $query, ?string $category = null): Builder
     {
         return Menu::query()
-            ->where('isAvailable', true)
+            ->where('is_available', true)
             ->when($query, function ($q) use ($query) {
                 $q->where(function ($q) use ($query) {
                     $q->where('name', 'like', "%{$query}%")
@@ -31,7 +31,7 @@ class MenuService
      */
     public function getByCategory(string $category): Builder
     {
-        return Menu::where('isAvailable', true)
+        return Menu::where('is_available', true)
             ->where('category', $category)
             ->orderBy('created_at', 'desc');
     }
@@ -42,13 +42,13 @@ class MenuService
     public function getAvailable(bool $useCache = true): \Illuminate\Support\Collection
     {
         if (!$useCache) {
-            return Menu::where('isAvailable', true)
+            return Menu::where('is_available', true)
                 ->orderBy('created_at', 'desc')
                 ->get();
         }
 
         return \Cache::remember('menus.available', 3600, function () {
-            return Menu::where('isAvailable', true)
+            return Menu::where('is_available', true)
                 ->orderBy('created_at', 'desc')
                 ->get();
         });
@@ -60,7 +60,7 @@ class MenuService
     public function getCategories(): array
     {
         return \Cache::remember('menu.categories', 3600, function () {
-            return Menu::where('isAvailable', true)
+            return Menu::where('is_available', true)
                 ->distinct()
                 ->pluck('category')
                 ->filter()

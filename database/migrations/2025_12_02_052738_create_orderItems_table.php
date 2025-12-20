@@ -17,6 +17,10 @@ return new class extends Migration {
             $table->integer('quantity')->default(0);
             $table->decimal('price_at_purchase', 10, 2)->default(0);
             $table->timestamps();
+
+            // Indexes from add_performance_indexes
+            $table->index('menu_id');
+            $table->index(['order_id', 'menu_id']);
         });
     }
 

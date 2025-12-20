@@ -8,7 +8,9 @@ use App\Models\OrderItem;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+
 
 class AdminController extends Controller
 {
@@ -457,7 +459,7 @@ class AdminController extends Controller
             'image' => $validated['image_url'],
             'category' => $validated['category'],
             'daily_limit' => $validated['daily_limit'],
-            'isAvailable' => $validated['is_available'] ?? true,
+            'is_available' => $validated['is_available'] ?? true,
         ]);
 
         return back()->with('success', 'Product created successfully.');
@@ -482,7 +484,7 @@ class AdminController extends Controller
             'image' => $validated['image_url'],
             'category' => $validated['category'],
             'daily_limit' => $validated['daily_limit'],
-            'isAvailable' => $validated['is_available'] ?? $product->isAvailable,
+            'is_available' => $validated['is_available'] ?? $product->is_available,
         ]);
 
         return back()->with('success', 'Product updated successfully.');
@@ -496,7 +498,7 @@ class AdminController extends Controller
 
     public function toggleProductAvailability(Menu $product)
     {
-        $product->isAvailable = !$product->isAvailable;
+        $product->is_available = !$product->is_available;
         $product->save();
 
         return back()->with('success', 'Product availability updated.');

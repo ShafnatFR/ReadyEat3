@@ -21,7 +21,7 @@ class MenuController extends Controller
     public function home()
     {
         // Get all products for best seller section
-        $bestProducts = Menu::where('isAvailable', true)
+        $bestProducts = Menu::where('is_available', true)
             ->select('id', 'name', 'category', 'price', 'description', 'image')
             ->latest()
             ->limit(8)
@@ -30,7 +30,7 @@ class MenuController extends Controller
         // Get featured products for carousel
         $featuredProductIds = [1, 2, 3, 4];
         $featuredProducts = Menu::whereIn('id', $featuredProductIds)
-            ->where('isAvailable', true)
+            ->where('is_available', true)
             ->select('id', 'name', 'category', 'price', 'description', 'image')
             ->get();
 
@@ -46,7 +46,7 @@ class MenuController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Menu::where('isAvailable', true);
+        $query = Menu::where('is_available', true);
 
         // P3: Search functionality
         if ($request->has('search') && $request->search) {
