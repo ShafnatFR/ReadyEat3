@@ -18,24 +18,39 @@ class DatabaseSeeder extends Seeder
         $this->command->info('🌱 Starting OPTIMIZED database seeding (for better performance)...');
         $this->command->newLine();
 
+        // ===== STEP 0: Clean Old Data (Prevent Duplicates/Bloat) =====
+        $this->command->info('🧹 Cleaning old transaction data...');
+        \Illuminate\Support\Facades\Schema::disableForeignKeyConstraints();
+        Payment::truncate();
+        OrderItem::truncate();
+        Order::truncate();
+        // User::truncate(); // Aktifkan jika ingin reset user juga
+        \Illuminate\Support\Facades\Schema::enableForeignKeyConstraints();
+        $this->command->info('✅ Old transaction data cleared');
+        $this->command->newLine();
+
         // ===== STEP 1: Create Admin Accounts =====
         $this->command->info('👤 Creating admin accounts...');
 
-        User::create([
-            'name' => 'Administrator',
-            'email' => 'admin@gmail.com',
-            'password' => Hash::make('123'),
-            'role' => 'admin',
-            'email_verified_at' => now(),
-        ]);
+        User::firstOrCreate(
+            ['email' => 'admin@gmail.com'],
+            [
+                'name' => 'Administrator',
+                'password' => Hash::make('123'),
+                'role' => 'admin',
+                'email_verified_at' => now(),
+            ]
+        );
 
-        User::create([
-            'name' => 'Shafnat Admin',
-            'email' => 'admin@readyeat.com',
-            'password' => Hash::make('password'),
-            'role' => 'admin',
-            'email_verified_at' => now(),
-        ]);
+        User::firstOrCreate(
+            ['email' => 'shafnat@readyeat.com'],
+            [
+                'name' => 'Shafnat',
+                'password' => Hash::make('password'),
+                'role' => 'customer',
+                'email_verified_at' => now(),
+            ]
+        );
 
         $this->command->info('✅ Created 2 admin accounts');
         $this->command->newLine();

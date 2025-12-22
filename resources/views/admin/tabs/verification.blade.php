@@ -46,11 +46,11 @@
                     <td class="p-4">Rp {{ number_format($order->total_price, 0, ',', '.') }}</td>
                     <td class="p-4">
                         <span class="px-2 py-1 text-xs rounded-full 
-                                        {{ $order->status === 'payment_pending' ? 'bg-yellow-100 text-yellow-800' : '' }}
-                                        {{ $order->status === 'ready_for_pickup' ? 'bg-blue-100 text-blue-800' : '' }}
-                                        {{ $order->status === 'picked_up' ? 'bg-green-100 text-green-800' : '' }}
-                                        {{ $order->status === 'cancelled' ? 'bg-red-100 text-red-800' : '' }}
-                                        {{ $order->status === 'unpaid' ? 'bg-gray-100 text-gray-800' : '' }}">
+                                                {{ $order->status === 'payment_pending' ? 'bg-yellow-100 text-yellow-800' : '' }}
+                                                {{ $order->status === 'ready_for_pickup' ? 'bg-blue-100 text-blue-800' : '' }}
+                                                {{ $order->status === 'picked_up' ? 'bg-green-100 text-green-800' : '' }}
+                                                {{ $order->status === 'cancelled' ? 'bg-red-100 text-red-800' : '' }}
+                                                {{ $order->status === 'unpaid' ? 'bg-gray-100 text-gray-800' : '' }}">
                             {{ ucfirst(str_replace('_', ' ', $order->status)) }}
                         </span>
                     </td>
@@ -62,7 +62,6 @@
                     </td>
                 </tr>
 
-                {{-- Modal for this order --}}
                 <template x-teleport="body">
                     <div x-show="selectedOrderId === {{ $order->id }}" x-cloak @click="selectedOrderId = null"
                         @keydown.escape.window="selectedOrderId = null"
@@ -74,7 +73,37 @@
 
                         <div @click.stop
                             class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto"
-                            x-data="{ imageZoom: false }">
+                            x-data="{ 
+                                        imageZoom: false,
+                                        status: '{{ $order->status }}',
+                                        message: '',
+                                        phone: '{{ $order->customer_phone }}',
+
+                                        init() {
+                                            this.updateMessage();
+                                            $watch('status', value => this.updateMessage());
+                                        },
+
+                                        updateMessage() {
+                                            const templates = {
+                                                'payment_pending': 'Halo Kak {{ addslashes($order->customer_name) }}, mohon konfirmasi untuk pesanan {{ $order->invoice_code }}. Apakah pembayaran sudah dilakukan? Mohon kirim bukti transfer yang jelas ya. Terima kasih! 🙏',
+                                                'ready_for_pickup': 'Halo Kak {{ addslashes($order->customer_name) }}, pesanan {{ $order->invoice_code }} SUDAH SIAP diambil ya! Ditunggu kedatangannya. 🍽️',
+                                                'picked_up': 'Halo Kak {{ addslashes($order->customer_name) }}, terima kasih sudah order {{ $order->invoice_code }}. Selamat menikmati! Ditunggu order selanjutnya ya. ✨',
+                                                'cancelled': 'Halo Kak {{ addslashes($order->customer_name) }}, mohon maaf pesanan {{ $order->invoice_code }} belum dapat kami proses karena BUKTI PEMBAYARAN TIDAK JELAS / TIDAK SESUAI. Mohon kirim ulang bukti yang benar ya. Terima kasih. 🙏',
+                                                'unpaid': 'Halo Kak {{ addslashes($order->customer_name) }}, pesanan {{ $order->invoice_code }} belum dibayar. Mohon selesaikan pembayaran agar pesanan dapat diproses.'
+                                            };
+                                            this.message = templates[this.status] || '';
+                                        },
+
+                                        get waLink() {
+                                            // Remove non-numeric chars for phone link
+                                            let cleanPhone = this.phone.replace(/\D/g, '');
+                                            // Ensure ID format (62...)
+                                            if(cleanPhone.startsWith('0')) cleanPhone = '62' + cleanPhone.substring(1);
+
+                                            return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(this.message)}`;
+                                        }
+                                    }">
                             {{-- Modal Header --}}
                             <div
                                 class="p-6 border-b dark:border-gray-700 flex justify-between items-center sticky top-0 bg-white dark:bg-gray-800 z-10">
@@ -131,12 +160,12 @@
                                         <div>
                                             <label
                                                 class="block font-bold mb-1 text-gray-900 dark:text-gray-300">Status:</label>
-                                            <select name="status"
+                                            <select name="status" x-model="status"
                                                 class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary">
-                                                <option value="payment_pending" {{ $order->status === 'payment_pending' ? 'selected' : '' }}>Payment Pending</option>
-                                                <option value="ready_for_pickup" {{ $order->status === 'ready_for_pickup' ? 'selected' : '' }}>Ready for Pickup</option>
-                                                <option value="picked_up" {{ $order->status === 'picked_up' ? 'selected' : '' }}>Picked Up</option>
-                                                <option value="cancelled" {{ $order->status === 'cancelled' ? 'selected' : '' }}>Cancelled</option>
+                                                <option value="payment_pending">Payment Pending</option>
+                                                <option value="ready_for_pickup">Ready for Pickup</option>
+                                                <option value="picked_up">Picked Up</option>
+                                                <option value="cancelled">Cancelled</option>
                                             </select>
                                         </div>
 
@@ -149,10 +178,21 @@
 
                                         <div>
                                             <label class="block font-bold mb-1 text-gray-900 dark:text-gray-300">Catatan
-                                                Admin:</label>
-                                            <textarea name="admin_note" rows="3"
+                                                Admin (Internal):</label>
+                                            <textarea name="admin_note" rows="2"
                                                 class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary"
                                                 placeholder="e.g., Customer agreed to move pickup date.">{{ $order->admin_note }}</textarea>
+                                        </div>
+
+                                        {{-- Custom Message for Customer --}}
+                                        <div>
+                                            <label class="block font-bold mb-1 text-gray-900 dark:text-gray-300">Pesan
+                                                WhatsApp Customer:</label>
+                                            <textarea x-model="message" rows="3"
+                                                class="w-full p-2 border border-green-300 dark:border-green-700 rounded-md bg-green-50 dark:bg-green-900/10 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm"
+                                                placeholder="Pesan untuk customer..."></textarea>
+                                            <p class="text-xs text-gray-500 mt-1">Pesan ini akan dikirim saat Anda klik
+                                                tombol Chat WA.</p>
                                         </div>
 
                                         <div class="flex gap-2 pt-4">
@@ -208,8 +248,7 @@
                             {{-- Modal Footer --}}
                             <div
                                 class="p-6 bg-gray-50 dark:bg-gray-700/50 border-t dark:border-gray-700 flex flex-wrap justify-between items-center gap-4">
-                                <a href="https://wa.me/{{ $order->customer_phone }}?text=Kak%2C%20bukti%20transfernya%20buram%2C%20tolong%20kirim%20ulang%20ya.%20Terima%20kasih.%20(Order%20ID%3A%20{{ $order->invoice_code }})"
-                                    target="_blank" rel="noopener noreferrer"
+                                <a :href="waLink" target="_blank" rel="noopener noreferrer"
                                     class="px-4 py-2 bg-green-500 text-white rounded-md font-semibold hover:bg-green-600 transition-colors inline-flex items-center gap-2">
                                     <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                                         <path

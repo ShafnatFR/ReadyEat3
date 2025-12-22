@@ -12,12 +12,23 @@ class MenuController extends Controller
      */
     public function home()
     {
+        // Get all products for best seller section
         $bestProducts = Menu::where('is_available', true)
+            ->select('id', 'name', 'category', 'price', 'description', 'image')
             ->latest()
             ->limit(8)
             ->get();
 
-        $featuredProducts = $bestProducts->take(4);
+        // Get featured products for carousel
+        $featuredProductIds = [1, 2, 3, 4];
+        $featuredProducts = Menu::whereIn('id', $featuredProductIds)
+            ->where('is_available', true)
+            ->select('id', 'name', 'category', 'price', 'description', 'image')
+            ->get();
+
+        if ($featuredProducts->count() < 4) {
+            $featuredProducts = $bestProducts->take(4);
+        }
 
         return view('welcome', compact('bestProducts', 'featuredProducts'));
     }

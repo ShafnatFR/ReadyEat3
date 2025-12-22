@@ -8,15 +8,16 @@ class Payment extends Model
 {
     use HasFactory;
 
-    // Perbaikan: sesuaikan dengan tabel 'payment' (singular di migration)
-    protected $table = 'payment';
+    // Perbaikan: sesuaikan dengan tabel 'payments' (plural)
+    protected $table = 'payments';
 
     protected $fillable = [
         'order_id',
-        'proof_image',  // Fixed typo: was 'prof_image'
+        'proof_image',
         'amount',
-        'status'        // Added missing status field
+        'status'
     ];
+
 
     public function order()
     {

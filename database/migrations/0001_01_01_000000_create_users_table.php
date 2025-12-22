@@ -14,11 +14,16 @@ return new class extends Migration {
             $table->id();
             $table->string('name');
             $table->string('email')->unique();
+            $table->string('phone', 15)->nullable(); // Consolidated from add_phone_to_users
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->enum('role', ['admin', 'customer'])->default('customer'); // <--- PENTING
+            $table->enum('role', ['admin', 'customer'])->default('customer');
             $table->rememberToken();
             $table->timestamps();
+
+            // Indexes
+            $table->index('phone'); // From add_phone_to_users
+            $table->index('role');  // From add_performance_indexes
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {

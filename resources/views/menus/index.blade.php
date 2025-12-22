@@ -36,7 +36,7 @@
                             class="px-4 py-1.5 rounded-full whitespace-nowrap {{ !request('category') ? 'bg-white shadow text-orange-500 font-semibold' : 'text-gray-600 hover:bg-white/60' }}">
                             All
                         </a>
-                        @foreach (['Meal', 'Snack', 'Drink', 'Dessert', 'Kit'] as $cat)
+                        @foreach (['Katering', 'Instant'] as $cat)
                             <a href="{{ route('menus.index', array_merge(request()->except('category'), ['category' => $cat] + request()->only('sort'))) }}"
                                 class="px-4 py-1.5 rounded-full whitespace-nowrap {{ request('category') == $cat ? 'bg-white shadow text-orange-500 font-semibold' : 'text-gray-600 hover:bg-white/60' }}">
                                 {{ $cat }}

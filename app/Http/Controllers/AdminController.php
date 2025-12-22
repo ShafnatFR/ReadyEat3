@@ -9,7 +9,9 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+
 
 class AdminController extends Controller
 {
@@ -171,15 +173,25 @@ class AdminController extends Controller
     private function getPickupOrders(Request $request)
     {
         $search = $request->get('search', '');
-
-        $defaultPickupDate = Order::where('status', 'ready_for_pickup')
-            ->orderBy('pickup_date', 'desc')
-            ->value('pickup_date') ?? Carbon::today()->format('Y-m-d');
-        $pickupDate = $request->get('pickup_date', $defaultPickupDate);
+        $period = $request->get('pickup_period', 'today');
+        $startDate = $request->get('start_date');
+        $endDate = $request->get('end_date');
 
         $query = Order::with('items.menu')
-            ->where('status', 'ready_for_pickup')
-            ->where('pickup_date', $pickupDate);
+            ->where('status', 'ready_for_pickup');
+
+        // Filter berdasarkan Periode
+        if ($period === 'week') {
+            $query->whereBetween('pickup_date', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()]);
+        } elseif ($period === 'month') {
+            $query->whereMonth('pickup_date', Carbon::now()->month)
+                ->whereYear('pickup_date', Carbon::now()->year);
+        } elseif ($period === 'custom' && $startDate && $endDate) {
+            $query->whereBetween('pickup_date', [$startDate, $endDate]);
+        } else {
+            // Default: 'today'
+            $query->whereDate('pickup_date', Carbon::today());
+        }
 
         if ($search) {
             $query->where(function ($q) use ($search) {
@@ -188,7 +200,7 @@ class AdminController extends Controller
             });
         }
 
-        return $query->get();
+        return $query->orderBy('pickup_date', 'asc')->get();
     }
 
     private function getCustomers(Request $request = null)
@@ -518,7 +530,7 @@ class AdminController extends Controller
     public function printPickup(Request $request)
     {
         $date = $request->get('date', Carbon::today()->toDateString());
-        $pickupOrders = Order::with(['items.menu', 'user'])
+        $pickupOrders = Order::with('items.menu')
             ->whereDate('pickup_date', $date)
             ->whereIn('status', ['ready_for_pickup', 'picked_up'])
             ->orderBy('pickup_date', 'asc')

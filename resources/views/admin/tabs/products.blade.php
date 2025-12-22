@@ -22,7 +22,7 @@
         </thead>
         <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
             @forelse($products as $product)
-                <tr class="{{ !$product->isAvailable ? 'opacity-60 bg-gray-100 dark:bg-gray-700/30' : '' }}">
+                <tr class="{{ !$product->is_available ? 'opacity-60 bg-gray-100 dark:bg-gray-700/30' : '' }}">
                     <td class="p-4 font-semibold">{{ $product->name }}</td>
                     <td class="p-4">Rp {{ number_format($product->price, 0, ',', '.') }}</td>
                     <td class="p-4">{{ $product->category }}</td>
@@ -30,8 +30,14 @@
                     <td class="p-4">
                         <form method="POST" action="{{ route('admin.products.toggle', $product) }}">
                             @csrf
-                            <input type="checkbox" {{ $product->isAvailable ? 'checked' : '' }}
-                                onchange="this.form.submit()" class="rounded text-primary focus:ring-primary">
+                            <label
+                                class="relative inline-flex items-center cursor-pointer hover:opacity-80 transition-opacity"
+                                title="Click to toggle availability">
+                                <input type="checkbox" onchange="this.form.submit()" class="sr-only peer" {{ $product->is_available ? 'checked' : '' }}>
+                                <div
+                                    class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 dark:peer-focus:ring-orange-800 rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary">
+                                </div>
+                            </label>
                         </form>
                     </td>
                     <td class="p-4 flex gap-2">
@@ -106,11 +112,8 @@
                             <label class="block font-semibold text-gray-900 dark:text-gray-300 mb-1">Category *</label>
                             <select name="category"
                                 class="w-full p-2 border rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
-                                <option value="Meal" :selected="formData.category === 'Meal'">Meal</option>
-                                <option value="Snack" :selected="formData.category === 'Snack'">Snack</option>
-                                <option value="Drink" :selected="formData.category === 'Drink'">Drink</option>
-                                <option value="Dessert" :selected="formData.category === 'Dessert'">Dessert</option>
-                                <option value="Kit" :selected="formData.category === 'Kit'">Kit</option>
+                                <option value="Katering" :selected="formData.category === 'Katering'">Katering</option>
+                                <option value="Instant" :selected="formData.category === 'Instant'">Instant</option>
                             </select>
                         </div>
                         <div>

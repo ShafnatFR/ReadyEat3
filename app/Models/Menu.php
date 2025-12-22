@@ -21,6 +21,7 @@ class Menu extends Model
         'daily_limit'
     ];
 
+
     public function orderItems()
     {
         return $this->hasMany(OrderItem::class);
