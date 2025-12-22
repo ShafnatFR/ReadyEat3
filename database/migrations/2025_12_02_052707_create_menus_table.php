@@ -17,7 +17,7 @@ return new class extends Migration {
             $table->decimal('price', 10, 2)->default(0);
             $table->string('image');
             $table->integer('daily_limit')->default(50);
-            $table->boolean('isAvailable')->default(true);
+            $table->boolean('is_available')->default(true);
             $table->timestamps();
         });
     }

@@ -71,7 +71,7 @@ class OrderSeeder extends Seeder
             Payment::create([
                 'order_id' => $order->id,
                 'amount' => $totalPrice,
-                'prof_image' => 'payments/dummy_proof_' . $i . '.jpg',
+                'proof_image' => 'payments/dummy_proof_' . $i . '.jpg',
             ]);
         }
     }

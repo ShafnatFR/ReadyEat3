@@ -12,11 +12,11 @@ return new class extends Migration {
     {
         Schema::table('menus', function (Blueprint $table) {
             // Add indexes for frequently queried columns
-            $table->index('isAvailable', 'idx_menus_is_available');
+            $table->index('is_available', 'idx_menus_is_available');
             $table->index('category', 'idx_menus_category');
 
             // Composite index for common filter combinations
-            $table->index(['isAvailable', 'category'], 'idx_menus_available_category');
+            $table->index(['is_available', 'category'], 'idx_menus_available_category');
         });
     }
 

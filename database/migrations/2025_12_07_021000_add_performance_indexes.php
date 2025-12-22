@@ -46,13 +46,13 @@ return new class extends Migration {
 
         Schema::table('menus', function (Blueprint $table) {
             if (!$this->indexExists('menus', 'idx_menus_available')) {
-                $table->index('isAvailable', 'idx_menus_available');
+                $table->index('is_available', 'idx_menus_available');
             }
             if (!$this->indexExists('menus', 'idx_menus_category')) {
                 $table->index('category', 'idx_menus_category');
             }
             if (!$this->indexExists('menus', 'idx_menus_available_category')) {
-                $table->index(['isAvailable', 'category'], 'idx_menus_available_category');
+                $table->index(['is_available', 'category'], 'idx_menus_available_category');
             }
         });
 

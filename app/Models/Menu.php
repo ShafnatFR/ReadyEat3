@@ -17,7 +17,7 @@ class Menu extends Model
         'category',
         'price',
         'image',
-        'isAvailable',
+        'is_available',
         'daily_limit'
     ];
 

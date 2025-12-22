@@ -42,13 +42,17 @@
             </div>
 
             <div class="space-y-3">
-                <a href="{{ route('menus.index') }}"
-                    class="block w-full bg-gray-900 text-white py-3 rounded-md font-semibold hover:bg-gray-800 transition-colors">
-                    Continue Shopping
+                <a href="{{ $whatsappUrl }}" target="_blank" id="whatsappBtn"
+                    class="block w-full bg-green-600 text-white py-3 rounded-md font-semibold hover:bg-green-700 transition-colors">
+                    Konfirmasi ke Admin via WhatsApp
                 </a>
-                <a href="{{ route('home') }}"
-                    class="block w-full border border-gray-300 text-gray-700 py-3 rounded-md font-semibold hover:bg-gray-50 transition-colors">
-                    Back to Home
+                <a href="{{ route('menus.index') }}" id="continueShoppingBtn"
+                    class="block w-full bg-gray-400 text-gray-200 py-3 rounded-md font-semibold cursor-not-allowed opacity-60 pointer-events-none">
+                    Continue Shopping (Locked)
+                </a>
+                <a href="{{ route('home') }}" id="backHomeBtn"
+                    class="block w-full border border-gray-300 bg-gray-100 text-gray-400 py-3 rounded-md font-semibold cursor-not-allowed opacity-60 pointer-events-none">
+                    Back to Home (Locked)
                 </a>
             </div>
 
@@ -58,4 +62,37 @@
             </div>
         </div>
     </div>
+
+    <script>
+        // Check if user already confirmed in this session
+        const orderKey = 'wa_confirmed_{{ $order->id }}';
+        
+        if (localStorage.getItem(orderKey) === 'true') {
+            unlockButtons();
+        }
+
+        // Listen for WhatsApp button click
+        document.getElementById('whatsappBtn').addEventListener('click', function() {
+            // Mark as confirmed in localStorage
+            localStorage.setItem(orderKey, 'true');
+            
+            // Unlock buttons after a short delay (to ensure WA opened)
+            setTimeout(unlockButtons, 1000);
+        });
+
+        function unlockButtons() {
+            const continueBtn = document.getElementById('continueShoppingBtn');
+            const homeBtn = document.getElementById('backHomeBtn');
+
+            // Unlock Continue Shopping button
+            continueBtn.classList.remove('bg-gray-400', 'text-gray-200', 'cursor-not-allowed', 'opacity-60', 'pointer-events-none');
+            continueBtn.classList.add('bg-gray-900', 'text-white', 'hover:bg-gray-800');
+            continueBtn.textContent = 'Continue Shopping';
+
+            // Unlock Back to Home button
+            homeBtn.classList.remove('bg-gray-100', 'text-gray-400', 'cursor-not-allowed', 'opacity-60', 'pointer-events-none');
+            homeBtn.classList.add('hover:bg-gray-50', 'text-gray-700');
+            homeBtn.textContent = 'Back to Home';
+        }
+    </script>
 </x-landing-layout>

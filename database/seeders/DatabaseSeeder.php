@@ -170,7 +170,7 @@ class DatabaseSeeder extends Seeder
                 Payment::create([
                     'order_id' => $order->id,
                     'amount' => $orderTotal,
-                    'prof_image' => 'payments/proof_' . $order->id . '.jpg',
+                    'proof_image' => 'payments/proof_' . $order->id . '.jpg',
                 ]);
 
                 $totalOrders++;
