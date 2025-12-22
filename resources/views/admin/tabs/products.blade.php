@@ -121,7 +121,7 @@
                             <label class="relative inline-flex items-center cursor-pointer mt-2">
                                 <input type="hidden" name="is_available" value="0">
                                 <input type="checkbox" name="is_available" value="1"
-                                    :checked="formData.isAvailable ?? true" class="sr-only peer">
+                                    :checked="formData.is_available ?? true" class="sr-only peer">
                                 <div
                                     class="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-green-600 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all">
                                 </div>

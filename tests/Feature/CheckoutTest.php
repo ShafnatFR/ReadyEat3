@@ -2,19 +2,20 @@
 
 namespace Tests\Feature;
 
-use Tests\TestCase;
-use App\Models\User;
 use App\Models\Menu;
 use App\Models\Order;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Tests\TestCase;
 
 class CheckoutTest extends TestCase
 {
     use RefreshDatabase;
 
     protected $user;
+
     protected $menu;
 
     protected function setUp(): void
@@ -25,8 +26,8 @@ class CheckoutTest extends TestCase
         $this->menu = Menu::factory()->create([
             'name' => 'Test Menu',
             'price' => 50000,
-            'isAvailable' => true,
-            'daily_limit' => 10
+            'is_available' => true,
+            'daily_limit' => 10,
         ]);
     }
 
@@ -47,8 +48,8 @@ class CheckoutTest extends TestCase
                 'name' => $this->menu->name,
                 'price' => $this->menu->price,
                 'quantity' => 2,
-                'image' => $this->menu->image
-            ]
+                'image' => $this->menu->image,
+            ],
         ]);
 
         $response = $this->actingAs($this->user)->get(route('checkout.index'));
@@ -79,8 +80,8 @@ class CheckoutTest extends TestCase
                 'name' => $this->menu->name,
                 'price' => $this->menu->price,
                 'quantity' => 2,
-                'image' => $this->menu->image
-            ]
+                'image' => $this->menu->image,
+            ],
         ]);
 
         $file = UploadedFile::fake()->image('payment.jpg', 200, 200);
@@ -89,7 +90,7 @@ class CheckoutTest extends TestCase
             'pickup_date' => now()->addDays(1)->format('Y-m-d'),
             'payment_proof' => $file,
             'phone' => '081234567890',
-            'notes' => 'Test order'
+            'notes' => 'Test order',
         ]);
 
         $this->assertDatabaseHas('orders', [
@@ -97,13 +98,13 @@ class CheckoutTest extends TestCase
             'status' => 'payment_pending',
             'customer_name' => $this->user->name,
             'customer_phone' => '081234567890',
-            'notes' => 'Test order'
+            'notes' => 'Test order',
         ]);
 
         $this->assertDatabaseHas('order_items', [
             'menu_id' => $this->menu->id,
             'quantity' => 2,
-            'price' => $this->menu->price
+            'price' => $this->menu->price,
         ]);
 
         $order = Order::latest()->first();
@@ -121,8 +122,8 @@ class CheckoutTest extends TestCase
                 'name' => $this->menu->name,
                 'price' => $this->menu->price,
                 'quantity' => 1,
-                'image' => $this->menu->image
-            ]
+                'image' => $this->menu->image,
+            ],
         ]);
 
         $response = $this->actingAs($this->user)->post(route('checkout.store'), [
@@ -143,8 +144,8 @@ class CheckoutTest extends TestCase
                 'name' => $this->menu->name,
                 'price' => $this->menu->price,
                 'quantity' => 1,
-                'image' => $this->menu->image
-            ]
+                'image' => $this->menu->image,
+            ],
         ]);
 
         $file = UploadedFile::fake()->image('payment.jpg');
@@ -169,12 +170,12 @@ class CheckoutTest extends TestCase
         // Create existing orders that fill 4 slots
         Order::factory()->create([
             'pickup_date' => now()->addDays(1)->format('Y-m-d'),
-            'status' => 'payment_pending'
+            'status' => 'payment_pending',
         ])->items()->create([
-                    'menu_id' => $this->menu->id,
-                    'quantity' => 4,
-                    'price' => $this->menu->price
-                ]);
+            'menu_id' => $this->menu->id,
+            'quantity' => 4,
+            'price' => $this->menu->price,
+        ]);
 
         // Try to order 3 (total would be 7, exceeds limit of 5)
         session()->put('cart', [
@@ -182,8 +183,8 @@ class CheckoutTest extends TestCase
                 'name' => $this->menu->name,
                 'price' => $this->menu->price,
                 'quantity' => 3,
-                'image' => $this->menu->image
-            ]
+                'image' => $this->menu->image,
+            ],
         ]);
 
         $file = UploadedFile::fake()->image('payment.jpg');
@@ -206,8 +207,8 @@ class CheckoutTest extends TestCase
                 'name' => $this->menu->name,
                 'price' => $this->menu->price,
                 'quantity' => 1,
-                'image' => $this->menu->image
-            ]
+                'image' => $this->menu->image,
+            ],
         ]);
 
         $file = UploadedFile::fake()->create('document.pdf');
@@ -224,9 +225,10 @@ class CheckoutTest extends TestCase
     public function only_order_owner_can_view_success_page()
     {
         $order = Order::factory()->create([
-            'user_id' => $this->user->id
+            'user_id' => $this->user->id,
         ]);
 
+        /** @var User $otherUser */
         $otherUser = User::factory()->create();
 
         $response = $this->actingAs($otherUser)->get(route('checkout.success', $order->id));

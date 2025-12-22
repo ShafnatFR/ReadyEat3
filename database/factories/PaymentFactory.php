@@ -11,7 +11,7 @@ class PaymentFactory extends Factory
     {
         return [
             'order_id' => Order::factory(),
-            'prof_image' => fake()->imageUrl(), // Simulasi path gambar bukti transfer
+            'proof_image' => fake()->imageUrl(), // Simulasi path gambar bukti transfer
             'amount' => fake()->numberBetween(50000, 500000),
         ];
     }
