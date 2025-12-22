@@ -1,7 +1,52 @@
 {{-- Customer Management Tab --}}
 <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-x-auto" x-data="{ selectedCustomerId: null }">
     <div class="p-4 border-b dark:border-gray-700">
-        <h3 class="text-xl font-bold text-gray-900 dark:text-white">Customer Management ({{ $customers['customers']->total() }})</h3>
+        <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Customer Management ({{ $customers['customers']->total() }})</h3>
+        
+        {{-- Search and Filter Form --}}
+        <form method="GET" action="{{ route('admin.dashboard') }}" class="flex flex-wrap gap-3">
+            <input type="hidden" name="tab" value="customers">
+            
+            {{-- Search Input --}}
+            <div class="flex-1 min-w-[250px]">
+                <input type="text" name="search" value="{{ request('search') }}" 
+                    placeholder="Search by name or phone..."
+                    class="w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary">
+            </div>
+            
+            {{-- Sort By Field --}}
+            <select name="sort_by" 
+                class="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary">
+                <option value="spending" {{ request('sort_by', 'spending') == 'spending' ? 'selected' : '' }}>Sort: Spending</option>
+                <option value="orders" {{ request('sort_by') == 'orders' ? 'selected' : '' }}>Sort: Orders</option>
+                <option value="name" {{ request('sort_by') == 'name' ? 'selected' : '' }}>Sort: Name</option>
+                <option value="date" {{ request('sort_by') == 'date' ? 'selected' : '' }}>Sort: First Seen</option>
+            </select>
+            
+            {{-- Sort Direction Buttons --}}
+            <div class="flex gap-1 bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+                <button type="submit" name="direction" value="desc" 
+                    class="px-3 py-1.5 rounded {{ request('direction', 'desc') == 'desc' ? 'bg-primary text-white' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600' }} transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </button>
+                <button type="submit" name="direction" value="asc" 
+                    class="px-3 py-1.5 rounded {{ request('direction') == 'asc' ? 'bg-primary text-white' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600' }} transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            {{-- Reset Button --}}
+            @if(request('search') || request('sort_by') != 'spending' || request('direction') == 'asc')
+                <a href="{{ route('admin.dashboard', ['tab' => 'customers']) }}" 
+                    class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg font-semibold transition-colors">
+                    Reset
+                </a>
+            @endif
+        </form>
     </div>
 
     <table class="w-full text-left">

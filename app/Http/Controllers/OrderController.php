@@ -136,7 +136,7 @@ class OrderController extends Controller
             ]);
 
             return back()
-                ->with('error', 'Terjadi kesalahan saat memproses pesanan Anda.')
+                ->with('error', 'Terjadi kesalahan saat memproses pesanan Anda: ' . $e->getMessage())
                 ->withInput();
         }
     }

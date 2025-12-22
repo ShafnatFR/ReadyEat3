@@ -34,10 +34,23 @@
         <div class="bg-white shadow-sm rounded-lg p-6">
             <h2 class="text-xl font-semibold mb-4">Payment Information</h2>
 
+            @if(session('success'))
+                <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-md mb-4">
+                    <p class="text-sm font-semibold">{{ session('success') }}</p>
+                </div>
+            @endif
+
+            @if(session('error'))
+                <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md mb-4">
+                    <p class="text-sm font-semibold">{{ session('error') }}</p>
+                </div>
+            @endif
+
             @if($errors->any())
                 <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md mb-4">
+                    <p class="text-sm font-semibold mb-2">Please fix the following errors:</p>
                     @foreach($errors->all() as $error)
-                        <p class="text-sm">{{ $error }}</p>
+                        <p class="text-sm">• {{ $error }}</p>
                     @endforeach
                 </div>
             @endif

@@ -66,7 +66,7 @@ class AdminController extends Controller
 
         $defaultDate = match ($filterType) {
             'daily' => Carbon::now()->format('Y-m-d'),
-            'weekly' => Carbon::now()->format('o-\WW'),
+            'weekly' => Carbon::now()->format('o-\\WW'),
             'yearly' => Carbon::now()->format('Y'),
             default => Carbon::now()->format('Y-m'),
         };
@@ -81,6 +81,18 @@ class AdminController extends Controller
         $uniqueCustomers = $filteredOrders->pluck('customer_phone')->unique()->count();
         $avgOrderValue = $completedOrders->count() > 0 ? $revenue / $completedOrders->count() : 0;
 
+        // Revenue Trend Data
+        $revenueTrend = $this->getRevenueTrend($filterType, $selectedDate);
+
+        // Top Products
+        $topProducts = $this->getTopProducts($completedOrders);
+
+        // Category Distribution
+        $categoryDistribution = $this->getCategoryDistribution($completedOrders);
+
+        // Top Customers
+        $topCustomers = $this->getTopCustomersData($completedOrders);
+
         return [
             'revenue' => $revenue,
             'totalOrders' => $totalOrders,
@@ -88,7 +100,126 @@ class AdminController extends Controller
             'avgOrderValue' => $avgOrderValue,
             'filterType' => $filterType,
             'selectedDate' => $selectedDate,
+            'revenueTrend' => $revenueTrend,
+            'topProducts' => $topProducts,
+            'categoryDistribution' => $categoryDistribution,
+            'topCustomers' => $topCustomers,
         ];
+    }
+
+    private function getRevenueTrend($filterType, $selectedDate)
+    {
+        $trend = [];
+
+        if ($filterType === 'yearly') {
+            // Get monthly data for the year
+            for ($month = 1; $month <= 12; $month++) {
+                $monthStr = str_pad($month, 2, '0', STR_PAD_LEFT);
+                $orders = Order::where('pickup_date', 'like', "{$selectedDate}-{$monthStr}%")
+                    ->whereIn('status', ['picked_up', 'ready_for_pickup'])
+                    ->sum('total_price');
+                $trend[] = [
+                    'label' => Carbon::create($selectedDate, $month, 1)->format('M'),
+                    'value' => $orders
+                ];
+            }
+        } elseif ($filterType === 'monthly') {
+            // Get daily data for the month
+            $year = substr($selectedDate, 0, 4);
+            $month = substr($selectedDate, 5, 2);
+            $daysInMonth = Carbon::create($year, $month, 1)->daysInMonth;
+
+            for ($day = 1; $day <= $daysInMonth; $day++) {
+                $dayStr = str_pad($day, 2, '0', STR_PAD_LEFT);
+                $date = "{$year}-{$month}-{$dayStr}";
+                $orders = Order::where('pickup_date', $date)
+                    ->whereIn('status', ['picked_up', 'ready_for_pickup'])
+                    ->sum('total_price');
+                $trend[] = [
+                    'label' => $day,
+                    'value' => $orders
+                ];
+            }
+        }
+
+        return $trend;
+    }
+
+    private function getTopProducts($orders)
+    {
+        $productSales = [];
+
+        foreach ($orders as $order) {
+            foreach ($order->items as $item) {
+                $menuId = $item->menu_id;
+                if (!isset($productSales[$menuId])) {
+                    $productSales[$menuId] = [
+                        'name' => $item->menu->name ?? 'Unknown',
+                        'quantity' => 0,
+                    ];
+                }
+                $productSales[$menuId]['quantity'] += $item->quantity;
+            }
+        }
+
+        // Sort by quantity and get top 5
+        usort($productSales, fn($a, $b) => $b['quantity'] <=> $a['quantity']);
+
+        return array_slice($productSales, 0, 5);
+    }
+
+    private function getCategoryDistribution($orders)
+    {
+        $categorySales = [];
+
+        foreach ($orders as $order) {
+            foreach ($order->items as $item) {
+                $category = $item->menu->category ?? 'Uncategorized';
+                if (!isset($categorySales[$category])) {
+                    $categorySales[$category] = 0;
+                }
+                $categorySales[$category] += $item->quantity;
+            }
+        }
+
+        $distribution = [];
+        foreach ($categorySales as $category => $count) {
+            $distribution[] = [
+                'label' => $category,
+                'value' => $count,
+            ];
+        }
+
+        return $distribution;
+    }
+
+    private function getTopCustomersData($orders)
+    {
+        $customerData = [];
+
+        foreach ($orders as $order) {
+            $phone = $order->customer_phone;
+            if (!$phone) {
+                continue;
+            }
+
+            if (!isset($customerData[$phone])) {
+                $customerData[$phone] = [
+                    'name' => $order->customer_name ?? 'Unknown',
+                    'phone' => $phone,
+                    'orders' => 0,
+                    'total' => 0,
+                ];
+            }
+
+            $customerData[$phone]['orders']++;
+            $customerData[$phone]['total'] += $order->total_price;
+        }
+
+        // Sort by total spent and get top 5
+        usort($customerData, fn($a, $b) => $b['total'] <=> $a['total']);
+
+        return array_slice($customerData, 0, 5);
     }
 
     private function filterOrdersByDate($orders, $filterType, $selectedDate)
@@ -202,7 +333,7 @@ class AdminController extends Controller
         return $query->orderBy('pickup_date', 'asc')->get();
     }
 
-    private function getCustomers(Request $request = null)
+    private function getCustomers(?Request $request = null)
     {
         $orders = Order::with('items.menu')
             ->whereIn('status', ['picked_up', 'ready_for_pickup'])
@@ -232,7 +363,42 @@ class AdminController extends Controller
             }
         }
 
-        usort($customerData, fn($a, $b) => $b['totalSpent'] <=> $a['totalSpent']);
+        // Apply search filter
+        $search = $request ? $request->get('search') : null;
+        if ($search) {
+            $customerData = array_filter($customerData, function ($customer) use ($search) {
+                $searchLower = strtolower($search);
+                return str_contains(strtolower($customer['name']), $searchLower) ||
+                       str_contains(strtolower($customer['phone']), $searchLower);
+            });
+        }
+
+        // Apply sorting
+        $sortBy = $request ? $request->get('sort_by', 'spending') : 'spending';
+        $direction = $request ? $request->get('direction', 'desc') : 'desc';
+        
+        usort($customerData, function ($a, $b) use ($sortBy, $direction) {
+            $result = 0;
+            
+            switch ($sortBy) {
+                case 'orders':
+                    $result = $a['totalOrders'] <=> $b['totalOrders'];
+                    break;
+                case 'name':
+                    $result = strcasecmp($a['name'], $b['name']);
+                    break;
+                case 'date':
+                    $result = $a['firstSeen'] <=> $b['firstSeen'];
+                    break;
+                case 'spending':
+                default:
+                    $result = $a['totalSpent'] <=> $b['totalSpent'];
+                    break;
+            }
+            
+            // Reverse if descending
+            return $direction === 'desc' ? -$result : $result;
+        });
 
         $perPage = $request ? $request->get('per_page', 20) : 20;
         $currentPage = $request ? $request->get('page', 1) : 1;

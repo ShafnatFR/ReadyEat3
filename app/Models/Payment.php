@@ -8,8 +8,8 @@ class Payment extends Model
 {
     use HasFactory;
 
-    // Perbaikan: sesuaikan dengan tabel 'payments' (plural)
-    protected $table = 'payments';
+    // Sesuaikan dengan tabel 'payment' di database
+    protected $table = 'payment';
 
     protected $fillable = [
         'order_id',
